@@ -3,12 +3,30 @@ let ctx: AudioContext | null = null;
 let muted = false;
 const subs = new Set<(m: boolean) => void>();
 
-if (typeof window !== "undefined") muted = localStorage.getItem("ui-muted") === "1";
+function getStorage(): Storage | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
+try {
+  muted = getStorage()?.getItem("ui-muted") === "1";
+} catch {
+  muted = false;
+}
 
 export const isMuted = () => muted;
 export function setMuted(m: boolean) {
   muted = m;
-  localStorage.setItem("ui-muted", m ? "1" : "0");
+  try {
+    getStorage()?.setItem("ui-muted", m ? "1" : "0");
+  } catch {
+    // Sound state still works when storage is unavailable or full.
+  }
   subs.forEach((s) => s(m));
 }
 export function onMuted(fn: (m: boolean) => void) {
