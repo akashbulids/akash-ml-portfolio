@@ -1,11 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Component, lazy, Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
+import { createClientOnlyFn } from "@tanstack/react-start";
+import {
+  Component,
+  useCallback,
+  useEffect,
+  useState,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 import { BootLoader } from "@/components/universe/BootLoader";
 import { VideoModal } from "@/components/universe/VideoModal";
 import { Nav, Hero, About, Skills, Projects, Education, Contact } from "@/components/universe/Sections";
 import { startThemeEngine } from "@/lib/theme-engine";
 
-const Universe3D = lazy(() => import("@/components/universe/Universe3D"));
+const loadUniverse3D = createClientOnlyFn(() => import("@/components/universe/Universe3D"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,6 +35,31 @@ class GLBoundary extends Component<{ children: ReactNode }, { failed: boolean }>
   override render() { return this.state.failed ? null : this.props.children; }
 }
 
+function BrowserUniverse3D() {
+  const [Scene, setScene] = useState<ComponentType | null>(null);
+  const [loadError, setLoadError] = useState<unknown>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    void loadUniverse3D().then(
+      ({ default: LoadedScene }) => {
+        if (active) setScene(() => LoadedScene);
+      },
+      (error: unknown) => {
+        if (active) setLoadError(error);
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (loadError !== null) throw loadError;
+  return Scene ? <Scene /> : null;
+}
+
 function hasWebGL() {
   try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { return false; }
 }
@@ -43,7 +76,7 @@ function Index() {
       <div aria-hidden className="fixed inset-0 -z-0 bg-[radial-gradient(ellipse_at_top,var(--live-soft),transparent_60%)]">
         {gl && (
           <GLBoundary>
-            <Suspense fallback={null}><Universe3D /></Suspense>
+            <BrowserUniverse3D />
           </GLBoundary>
         )}
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent" />
