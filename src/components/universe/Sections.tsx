@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
-import photo from "@/assets/akash.png.asset.json";
+import photo from "../../../assets-originals/akash.png?url";
 import poster from "@/assets/used-car-poster.jpg.asset.json";
 import {
   profile,
@@ -379,7 +379,7 @@ function Workstation() {
 
         <figure className="panel relative overflow-hidden p-2">
           <img
-            src={photo.url}
+            src={photo}
             alt="Akash R working on a laptop at his desk"
             className="aspect-[4/3.6] w-full rounded-md object-cover object-top"
             fetchPriority="high"
