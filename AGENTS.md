@@ -10,4 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Portfolio content, palettes and sound live in `src/content` and `src/lib`, never inline in components — keeps copy editable without touching presentation.
-- The 3D background (`Universe3D`) is lazy-loaded client-only behind a WebGL check and error boundary — SSR must never evaluate three.js.
+- Keep the portfolio background in CSS and SVG; do not add Three.js, React Three Fiber, WebGL canvases, or 3D transforms. Browser-only APIs must not be evaluated during SSR.

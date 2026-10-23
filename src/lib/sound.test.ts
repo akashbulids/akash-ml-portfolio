@@ -44,7 +44,7 @@ describe("sound module", () => {
       const listener = vi.fn();
       const unsubscribe = sound.onMuted(listener);
 
-      expect(sound.isMuted()).toBe(false);
+      expect(sound.isMuted()).toBe(true);
       expect(() => sound.setMuted(true)).not.toThrow();
       expect(sound.isMuted()).toBe(true);
       expect(listener).toHaveBeenCalledWith(true);
@@ -66,7 +66,7 @@ describe("sound module", () => {
 
     try {
       const sound = await import("./sound");
-      expect(sound.isMuted()).toBe(false);
+      expect(sound.isMuted()).toBe(true);
       expect(() => sound.setMuted(true)).not.toThrow();
       expect(sound.isMuted()).toBe(true);
       expect(() => sound.play()).not.toThrow();

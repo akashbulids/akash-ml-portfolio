@@ -1,27 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createClientOnlyFn } from "@tanstack/react-start";
 import {
-  Component,
   useCallback,
   useEffect,
   useState,
-  type ComponentType,
-  type ReactNode,
 } from "react";
 import { BootLoader } from "@/components/universe/BootLoader";
 import { VideoModal } from "@/components/universe/VideoModal";
 import { Nav, Hero, About, Skills, Projects, Education, Contact } from "@/components/universe/Sections";
 import { startThemeEngine } from "@/lib/theme-engine";
-
-const loadUniverse3D = createClientOnlyFn(() => import("@/components/universe/Universe3D"));
+import { profile } from "@/content/portfolio";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Akash R — The AI Universe | Machine Learning Portfolio" },
-      { name: "description", content: "Interactive 3D portfolio of Akash R, aspiring Machine Learning Engineer: predictive modeling, NLP, segmentation and ML apps." },
-      { property: "og:title", content: "Akash R — The AI Universe" },
-      { property: "og:description", content: "Interactive 3D portfolio of Akash R, aspiring Machine Learning Engineer." },
+      { title: `${profile.site} | Machine Learning Portfolio` },
+      { name: "description", content: "Explore Akash R's machine-learning projects, data science work, and journey toward practical AI applications." },
+      { property: "og:title", content: profile.site },
+      { property: "og:description", content: "A cinematic portfolio of Akash R's machine-learning projects and learning journey." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -29,57 +24,31 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-class GLBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
-  override state = { failed: false };
-  static getDerivedStateFromError() { return { failed: true }; }
-  override render() { return this.state.failed ? null : this.props.children; }
-}
-
-function BrowserUniverse3D() {
-  const [Scene, setScene] = useState<ComponentType | null>(null);
-  const [loadError, setLoadError] = useState<unknown>(null);
-
-  useEffect(() => {
-    let active = true;
-
-    void loadUniverse3D().then(
-      ({ default: LoadedScene }) => {
-        if (active) setScene(() => LoadedScene);
-      },
-      (error: unknown) => {
-        if (active) setLoadError(error);
-      },
-    );
-
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  if (loadError !== null) throw loadError;
-  return Scene ? <Scene /> : null;
-}
-
-function hasWebGL() {
-  try { const c = document.createElement("canvas"); return !!(c.getContext("webgl2") || c.getContext("webgl")); } catch { return false; }
-}
-
 function Index() {
   const [booted, setBooted] = useState(false);
-  const [gl, setGl] = useState(false);
   const [video, setVideo] = useState(false);
   const done = useCallback(() => setBooted(true), []);
-  useEffect(() => { setGl(hasWebGL()); return startThemeEngine(); }, []);
+  useEffect(() => startThemeEngine(), []);
 
   return (
     <div className="relative">
-      <div aria-hidden className="fixed inset-0 -z-0 bg-[radial-gradient(ellipse_at_top,var(--live-soft),transparent_60%)]">
-        {gl && (
-          <GLBoundary>
-            <BrowserUniverse3D />
-          </GLBoundary>
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent" />
+      <div aria-hidden="true" className="ambient-backdrop pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <div className="ambient-backdrop__wash absolute inset-0" />
+        <div className="ambient-backdrop__grid absolute inset-0" />
+        <svg
+          className="ambient-backdrop__network absolute inset-0 h-full w-full"
+          viewBox="0 0 1440 900"
+          preserveAspectRatio="xMidYMid slice"
+          fill="none"
+        >
+          <path d="M-80 650 230 430l240 150 270-310 220 170 260-220 300 120" />
+          <path d="M-30 280 210 420l250-160 260 250 210-170 240 180 330-160" />
+          <circle cx="230" cy="430" r="4" />
+          <circle cx="470" cy="580" r="4" />
+          <circle cx="740" cy="270" r="4" />
+          <circle cx="960" cy="440" r="4" />
+          <circle cx="1220" cy="220" r="4" />
+        </svg>
       </div>
       {!booted && <BootLoader onDone={done} />}
       <Nav />

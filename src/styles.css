@@ -46,6 +46,7 @@
 
 :root {
   --radius: 0.5rem;
+  color-scheme: dark;
   --background: oklch(0.15 0.02 255);
   --foreground: oklch(0.95 0.008 250);
   --card: oklch(0.19 0.025 255 / 0.72);
@@ -64,6 +65,8 @@
   --silver: oklch(0.82 0.01 250);
   --live: oklch(0.8 0.14 var(--live-h));
   --live-soft: oklch(0.8 0.14 var(--live-h) / 0.16);
+  --glow-violet: oklch(0.68 0.16 295 / 0.16);
+  --glow-magenta: oklch(0.68 0.16 340 / 0.1);
   --destructive: oklch(0.65 0.2 25);
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(0.85 0.02 250 / 0.12);
@@ -80,21 +83,164 @@
 
 @layer base {
   * { border-color: var(--color-border); }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
   body {
+    min-width: 320px;
     background-color: var(--color-background);
+    background-image:
+      radial-gradient(ellipse at 12% 4%, oklch(0.3 0.09 255 / 0.18), transparent 34rem),
+      radial-gradient(ellipse at 92% 40%, oklch(0.27 0.08 195 / 0.12), transparent 38rem);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
   h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.02em; }
+  a, button { -webkit-tap-highlight-color: transparent; }
+  :focus-visible { outline: 2px solid var(--live); outline-offset: 4px; }
   ::selection { background: var(--live-soft); }
+}
+
+.ambient-backdrop__wash {
+  background:
+    radial-gradient(ellipse at 18% 12%, var(--live-soft), transparent 34rem),
+    radial-gradient(ellipse at 82% 34%, var(--glow-violet), transparent 32rem),
+    radial-gradient(ellipse at 64% 82%, var(--glow-magenta), transparent 36rem),
+    linear-gradient(145deg, oklch(0.15 0.02 255), oklch(0.12 0.018 265));
+}
+
+.ambient-backdrop__grid {
+  background-image:
+    linear-gradient(to right, oklch(0.8 0.05 240 / 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(0.8 0.05 240 / 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(to bottom, black, transparent 78%);
+}
+
+.ambient-backdrop__network path {
+  stroke: var(--live);
+  stroke-dasharray: 2 16;
+  stroke-linecap: round;
+  stroke-opacity: 0.15;
+  stroke-width: 1;
+  animation: network-drift 42s linear infinite;
+}
+
+.ambient-backdrop__network circle {
+  fill: var(--live);
+  fill-opacity: 0.3;
+}
+
+.profile-stage {
+  aspect-ratio: 1;
+}
+
+.profile-stage__halo {
+  background:
+    radial-gradient(ellipse at 45% 38%, var(--live-soft), transparent 67%),
+    radial-gradient(ellipse at 65% 72%, var(--glow-violet), transparent 70%);
+}
+
+.profile-stage__orbit circle,
+.profile-stage__orbit path {
+  stroke: var(--live);
+  stroke-opacity: 0.28;
+  stroke-width: 1;
+}
+
+.profile-stage__orbit circle:nth-of-type(2) {
+  stroke-dasharray: 2 8;
+  animation: network-drift 34s linear infinite;
+}
+
+.profile-stage__orbit path {
+  stroke-opacity: 0.46;
+}
+
+.profile-stage__orbit .profile-stage__node,
+.profile-orbit__node {
+  fill: var(--live);
+  stroke: none;
+}
+
+.profile-stage__orbit .profile-stage__node--warm,
+.profile-orbit__node--warm {
+  fill: var(--amber);
+}
+
+.profile-stage__frame,
+.profile-orbit__portrait {
+  box-shadow: 0 28px 80px -48px var(--live), 0 12px 45px -30px oklch(0.05 0.02 255 / 0.9);
+}
+
+.profile-stage__frame img {
+  transition: transform 450ms ease;
+}
+
+.profile-stage__frame:hover img {
+  transform: scale(1.018);
+}
+
+.profile-stage__code,
+.profile-stage__chart {
+  animation: soft-rise 750ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.profile-stage__chart {
+  animation-delay: 120ms;
+}
+
+.profile-orbit__ring {
+  stroke: var(--live);
+  stroke-opacity: 0.34;
+  stroke-width: 1;
+  stroke-dasharray: 2 10;
+  animation: network-drift 38s linear infinite;
+}
+
+.profile-orbit__ring--inner {
+  stroke: var(--amber);
+  stroke-opacity: 0.2;
+  stroke-dasharray: 1 12;
+  animation-direction: reverse;
+  animation-duration: 52s;
+}
+
+.profile-orbit__ticks {
+  stroke: var(--live);
+  stroke-opacity: 0.5;
+  stroke-width: 1;
+}
+
+.profile-orbit__portrait {
+  transition: transform 350ms ease, box-shadow 350ms ease;
+}
+
+.profile-orbit__portrait:hover {
+  transform: translate(-50%, -50%) scale(1.025);
+}
+
+.project-art {
+  isolation: isolate;
+}
+
+.project-art::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 55%, var(--live-soft), transparent 70%);
+  content: "";
+  opacity: 0.65;
+  transition: opacity 350ms ease;
+}
+
+.project-art:hover::after {
+  opacity: 1;
 }
 
 @utility panel {
   background: var(--card);
   border: 1px solid var(--border);
-  backdrop-filter: blur(14px);
+  backdrop-filter: blur(18px);
   box-shadow: var(--shadow-panel);
   border-radius: var(--radius-lg);
 }
@@ -118,33 +264,42 @@
 
 @utility btn-live {
   display: inline-flex; align-items: center; gap: .6rem;
-  padding: .85rem 1.4rem; border-radius: 999px;
-  font-family: var(--font-mono); font-size: .78rem; letter-spacing: .18em; text-transform: uppercase;
+  min-height: 2.875rem; padding: .75rem 1.2rem; border-radius: 999px;
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
   background: var(--live); color: var(--primary-foreground);
-  transition: transform .25s, box-shadow .25s;
-  &:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px var(--live); }
+  transition: transform .25s, box-shadow .25s, background-color .25s;
+  &:hover { transform: translateY(-2px); box-shadow: 0 12px 36px -16px var(--live); }
 }
 
 @utility btn-ghost {
   display: inline-flex; align-items: center; gap: .6rem;
-  padding: .85rem 1.4rem; border-radius: 999px;
-  font-family: var(--font-mono); font-size: .78rem; letter-spacing: .18em; text-transform: uppercase;
+  min-height: 2.875rem; padding: .75rem 1.2rem; border-radius: 999px;
+  font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
   border: 1px solid var(--border); color: var(--foreground);
-  transition: border-color .25s, background .25s;
+  transition: transform .25s, border-color .25s, background .25s;
+  &:hover { transform: translateY(-2px); }
   &:hover { border-color: var(--live); background: var(--live-soft); }
 }
 
 @keyframes sweep { 0%,100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
-@keyframes word-in { from { opacity: 0; transform: translateY(0.6em) rotateX(-60deg); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes word-in { from { opacity: 0; transform: translateY(0.6em); } to { opacity: 1; transform: translateY(0); } }
+@keyframes soft-rise { from { transform: translateY(0.5rem); } to { transform: translateY(0); } }
 @keyframes blink { 50% { opacity: 0; } }
 @keyframes dash { to { stroke-dashoffset: 0; } }
-@keyframes spin-slow { to { transform: rotateX(60deg) rotateZ(360deg); } }
 @keyframes float { 50% { transform: translateY(-8px); } }
+@keyframes loading-sweep { from { transform: translateX(-100%); } to { transform: translateX(400%); } }
+@keyframes network-drift { to { stroke-dashoffset: -180; } }
 
 @utility word-in { animation: word-in .9s cubic-bezier(.2,.8,.2,1) both; }
 @utility caret { animation: blink 1s steps(1) infinite; }
 @utility floaty { animation: float 6s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
 }

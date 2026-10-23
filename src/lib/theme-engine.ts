@@ -22,8 +22,8 @@ export const PALETTES: { name: string; hue: number; hex: string }[] = [
   { name: "Deep Space Blue", hue: 260, hex: "#4c6bd8" },
 ];
 
-/** Milliseconds between palette changes. Adjust freely. */
-export const THEME_INTERVAL_MS = 1100;
+/** Milliseconds between palette changes. */
+export const THEME_INTERVAL_MS = 14_000;
 
 type Listener = (i: number) => void;
 const listeners = new Set<Listener>();

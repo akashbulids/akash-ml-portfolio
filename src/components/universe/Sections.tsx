@@ -11,17 +11,23 @@ import {
   Plane,
   MessageSquareText,
   Users,
+  BrainCircuit,
+  ChartNoAxesColumnIncreasing,
+  CodeXml,
+  Wrench,
 } from "lucide-react";
 
-import photo from "../../../assets-originals/akash.png?url";
-import poster from "@/assets/used-car-poster.jpg.asset.json";
+import photo from "../../../assets-originals/akash-optimized.webp?url";
+import poster from "../../../assets-originals/used-car-poster.jpg?url";
 import {
   profile,
   skills,
   projects,
   education,
+  portfolioCopy,
   sections,
   type Project,
+  type SkillCategory,
 } from "@/content/portfolio";
 import { play, isMuted, setMuted, onMuted } from "@/lib/sound";
 import { PALETTES, onPalette, getPaletteIndex } from "@/lib/theme-engine";
@@ -69,9 +75,22 @@ function Reveal({
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
+    if (
+      typeof IntersectionObserver === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      setShown(true);
+      return;
+    }
+
     const io = new IntersectionObserver(
-      ([e]) => e?.isIntersecting && (setShown(true), io.disconnect()),
-      { threshold: 0.15 },
+      ([e]) => {
+        if (e?.isIntersecting) {
+          setShown(true);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.08 },
     );
 
     if (ref.current) io.observe(ref.current);
@@ -82,10 +101,10 @@ function Reveal({
   return (
     <div
       ref={ref}
-      className={`transition-all duration-1000 ease-out ${
+      className={`transition-all duration-700 ease-out ${
         shown
           ? "translate-y-0 opacity-100"
-          : "translate-y-10 opacity-0"
+          : "translate-y-2 opacity-90"
       } ${className}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
@@ -102,9 +121,9 @@ function Heading({
   title: string;
 }) {
   return (
-    <Reveal className="mb-12">
+    <Reveal className="mb-10 md:mb-14">
       <div className="eyebrow mb-4">{eyebrow}</div>
-      <h2 className="text-4xl font-semibold md:text-6xl">{title}</h2>
+      <h2 className="text-4xl font-semibold leading-tight md:text-6xl">{title}</h2>
     </Reveal>
   );
 }
@@ -146,13 +165,13 @@ export function Nav() {
     <>
       <nav
         aria-label="Main"
-        className="panel fixed left-1/2 top-4 z-50 flex -translate-x-1/2 items-center gap-1 rounded-full px-2 py-1.5 md:top-6"
+        className="panel fixed left-1/2 top-4 z-50 flex w-max max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center justify-start gap-0.5 overflow-x-auto overscroll-x-contain rounded-full px-2 py-1.5 md:top-6 md:gap-1 md:overflow-visible"
       >
         <a
           href="#home"
           className="hidden px-3 font-display text-sm font-semibold tracking-widest sm:block"
         >
-          AR<span className="text-live">.</span>
+          NO<span className="text-live">.</span>
         </a>
 
         {sections.map((s) => (
@@ -161,7 +180,7 @@ export function Nav() {
             href={`#${s.id}`}
             onClick={() => play("click")}
             aria-current={active === s.id ? "true" : undefined}
-            className={`rounded-full px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.15em] transition-colors md:px-3 md:text-[11px] ${
+            className={`rounded-full px-1 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors sm:px-2.5 sm:tracking-[0.15em] md:px-3 md:text-[11px] ${
               active === s.id
                 ? "bg-live-soft text-live"
                 : "text-muted-foreground hover:text-foreground"
@@ -180,7 +199,7 @@ export function Nav() {
             setMuted(!muted);
             if (muted) setTimeout(() => play("select"), 0);
           }}
-          className="ml-1 rounded-full p-2 text-muted-foreground hover:text-live"
+          className="ml-0.5 rounded-full p-1.5 text-muted-foreground hover:text-live sm:ml-1 sm:p-2"
         >
           {muted ? (
             <VolumeX className="h-4 w-4" />
@@ -231,109 +250,89 @@ export function Nav() {
 
 /* ---------- hero ---------- */
 
-function RoleTicker() {
-  const [i, setI] = useState(0);
-
-  useEffect(() => {
-    const id = setInterval(
-      () => setI((v) => (v + 1) % profile.roles.length),
-      2600,
-    );
-
-    return () => clearInterval(id);
-  }, []);
-
+function RoleChips() {
   return (
-    <div
-      className="h-9 overflow-hidden [perspective:600px] md:h-11"
-      aria-live="polite"
-    >
-      <div
-        key={i}
-        className="flex items-center font-display text-2xl text-live md:text-3xl"
-      >
-        {profile.roles[i]!.split(" ").map((w, k) => (
-          <span
-            key={k}
-            className="word-in mr-[0.3em] inline-block"
-            style={{ animationDelay: `${k * 110}ms` }}
-          >
-            {w}
-          </span>
-        ))}
-
-        <span className="caret ml-1 inline-block h-7 w-[3px] bg-live" />
-      </div>
+    <div className="flex flex-wrap gap-2" aria-label="Areas of interest">
+      {profile.roles.map((role) => (
+        <span
+          key={role}
+          className="rounded-full border border-live/20 bg-live-soft/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/80 sm:text-xs"
+        >
+          {role}
+        </span>
+      ))}
     </div>
   );
 }
 
 export function Hero() {
-  const go = (id: string) => {
-    play("click");
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-    });
-  };
-
   return (
     <section
       id="home"
-      className="relative flex min-h-screen items-center px-6 pb-16 pt-28 md:px-14"
+      className="relative flex min-h-screen items-center overflow-x-clip px-6 pb-16 pt-28 md:px-14"
     >
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
-        <div className="[perspective:800px]">
+        <div>
           <div className="eyebrow word-in mb-6">
-            World 01 · The Digital City
+            {portfolioCopy.hero.eyebrow}
           </div>
 
-          <h1 className="text-5xl font-semibold leading-[1.02] md:text-7xl xl:text-8xl">
-            {["Hi,", "I'm"].map((w, k) => (
-              <span
-                key={w}
-                className="word-in mr-[0.25em] inline-block"
-                style={{ animationDelay: `${200 + k * 120}ms` }}
-              >
-                {w}
-              </span>
-            ))}
-
+          <h1 className="text-6xl font-semibold leading-[0.98] md:text-7xl xl:text-8xl">
             <span
               className="word-in light-sweep inline-block"
-              style={{ animationDelay: "460ms" }}
+              style={{ animationDelay: "200ms" }}
             >
-              Akash R.
+              {profile.name}<span className="text-foreground">.</span>
             </span>
           </h1>
 
-          <div className="mt-6">
-            <RoleTicker />
+          <h2 className="mt-6 max-w-xl text-xl font-medium leading-snug text-foreground/90 md:text-3xl">
+            {profile.headline}
+          </h2>
+
+          <div className="mt-4">
+            <RoleChips />
           </div>
+          <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            {profile.location}
+          </p>
 
           <p
             className="word-in mt-6 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg"
-            style={{ animationDelay: "700ms" }}
+            style={{ animationDelay: "500ms" }}
           >
             {profile.intro}
           </p>
 
           <div
             className="word-in mt-10 flex flex-wrap gap-3"
-            style={{ animationDelay: "850ms" }}
+            style={{ animationDelay: "650ms" }}
           >
-            <button
-              onClick={() => go("projects")}
-              className="btn-live"
-            >
-              Explore my work
-            </button>
+            <a href="#projects" onClick={() => play("click")} className="btn-live">
+              {portfolioCopy.hero.viewProjects}
+            </a>
+            <a href="#contact" onClick={() => play("click")} className="btn-ghost">
+              {portfolioCopy.hero.contact}
+            </a>
+          </div>
 
-            <button
-              onClick={() => go("education")}
-              className="btn-ghost"
+          <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-muted-foreground">
+            <a
+              href={profile.github}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-live"
             >
-              Discover my journey
-            </button>
+              <GithubIcon /> GitHub
+            </a>
+            <a
+              href={profile.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-live"
+            >
+              <LinkedInIcon /> LinkedIn
+            </a>
           </div>
         </div>
 
@@ -344,61 +343,49 @@ export function Hero() {
         href="#about"
         className="absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 font-mono text-[10px] tracking-[0.3em] text-muted-foreground hover:text-live"
       >
-        SCROLL <ArrowDown className="floaty h-4 w-4" />
+        {portfolioCopy.hero.scroll} <ArrowDown className="floaty h-4 w-4" />
       </a>
     </section>
   );
 }
 
 function Workstation() {
-  const ref = useRef<HTMLDivElement>(null);
-
-  const onMove = (e: React.PointerEvent) => {
-    if (!ref.current || e.pointerType !== "mouse") return;
-
-    const r = ref.current.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width - 0.5;
-    const y = (e.clientY - r.top) / r.height - 0.5;
-
-    ref.current.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 6}deg)`;
-  };
-
   return (
-    <div
-      className="relative [perspective:1200px]"
-      onPointerMove={onMove}
-      onPointerLeave={() => {
-        if (ref.current) ref.current.style.transform = "";
-      }}
-    >
-      <div
-        ref={ref}
-        className="relative transition-transform duration-300 ease-out [transform-style:preserve-3d]"
+    <div className="profile-stage relative mx-auto w-full max-w-[34rem]">
+      <div className="profile-stage__halo absolute inset-[8%] rounded-full" aria-hidden="true" />
+      <svg
+        aria-hidden="true"
+        className="profile-stage__orbit absolute inset-0 h-full w-full"
+        viewBox="0 0 500 500"
+        fill="none"
       >
-        <div className="absolute -inset-6 rounded-2xl bg-live-soft blur-3xl" />
+        <circle cx="250" cy="250" r="221" />
+        <circle cx="250" cy="250" r="200" />
+        <path d="M250 18v52M250 430v52M18 250h52M430 250h52" />
+        <circle className="profile-stage__node" cx="250" cy="29" r="4" />
+        <circle className="profile-stage__node profile-stage__node--warm" cx="461" cy="315" r="3" />
+      </svg>
 
-        <figure className="panel relative overflow-hidden p-2">
+      <figure className="profile-stage__frame panel relative mx-auto w-[78%] overflow-hidden rounded-[2rem] p-2">
           <img
             src={photo}
             alt="Akash R working on a laptop at his desk"
-            className="aspect-[4/3.6] w-full rounded-md object-cover object-top"
+            className="aspect-[4/4.2] w-full rounded-[1.5rem] object-cover object-top"
             fetchPriority="high"
+            decoding="async"
           />
 
           <div
-            className="pointer-events-none absolute inset-x-2 bottom-2 h-1/3 rounded-b-md"
+            className="pointer-events-none absolute inset-x-2 bottom-2 h-1/3 rounded-b-[1.5rem]"
             style={{ background: "var(--gradient-fade)" }}
           />
 
-          <figcaption className="absolute bottom-5 left-6 font-mono text-[10px] tracking-[0.25em] text-silver">
-            WORKSPACE · LIVE
+          <figcaption className="absolute bottom-5 left-5 font-mono text-[9px] tracking-[0.2em] text-silver sm:left-7 sm:text-[10px]">
+            {profile.name.toUpperCase()} · {profile.location.toUpperCase()}
           </figcaption>
-        </figure>
+      </figure>
 
-        <div
-          className="panel absolute -left-8 top-10 hidden w-52 p-3 font-mono text-[10px] leading-5 md:block"
-          style={{ transform: "translateZ(60px)" }}
-        >
+      <div className="panel profile-stage__code absolute bottom-[7%] left-0 hidden w-52 p-3 font-mono text-[10px] leading-5 md:block">
           <div className="text-muted-foreground"># model.py</div>
           <div>
             <span className="text-live">from</span> sklearn{" "}
@@ -406,12 +393,9 @@ function Workstation() {
           </div>
           <div>model.fit(X_train, y_train)</div>
           <div className="text-amber">→ ready to predict</div>
-        </div>
+      </div>
 
-        <div
-          className="panel absolute -right-4 -top-6 hidden p-3 md:block"
-          style={{ transform: "translateZ(90px)" }}
-        >
+      <div className="panel profile-stage__chart absolute right-0 top-[13%] hidden p-3 md:block">
           <svg
             width="90"
             height="44"
@@ -425,7 +409,6 @@ function Workstation() {
               strokeWidth="2"
             />
           </svg>
-        </div>
       </div>
     </div>
   );
@@ -441,30 +424,32 @@ export function About() {
     >
       <div className="mx-auto max-w-7xl">
         <Heading
-          eyebrow="World 02 · The Personal Data Chamber"
-          title="About me"
+          eyebrow={portfolioCopy.about.eyebrow}
+          title={portfolioCopy.about.title}
         />
 
         <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
           <Reveal className="flex items-center justify-center">
-            <div
-              className="relative h-72 w-72 [perspective:800px] md:h-96 md:w-96"
-              aria-hidden
-            >
-              {[0, 1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="absolute inset-0 rounded-full border border-live/40"
-                  style={{
-                    animation: `spin-slow ${14 + i * 6}s linear infinite`,
-                    transform: `rotateX(60deg) rotateY(${i * 45}deg)`,
-                    inset: `${i * 10}%`,
-                  }}
-                />
-              ))}
-
-              <div className="absolute inset-[38%] rounded-full bg-live/30 blur-xl" />
-              <div className="absolute inset-[44%] rounded-full bg-live" />
+            <div className="profile-orbit relative flex h-72 w-full max-w-sm items-center justify-center md:h-96">
+              <svg
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full"
+                viewBox="0 0 400 400"
+                fill="none"
+              >
+                <circle cx="200" cy="200" r="168" className="profile-orbit__ring" />
+                <circle cx="200" cy="200" r="142" className="profile-orbit__ring profile-orbit__ring--inner" />
+                <path d="M200 16v44M200 340v44M16 200h44M340 200h44" className="profile-orbit__ticks" />
+                <circle cx="200" cy="32" r="4" className="profile-orbit__node" />
+                <circle cx="344" cy="283" r="3" className="profile-orbit__node profile-orbit__node--warm" />
+              </svg>
+              <img
+                src={photo}
+                alt="Portrait of Akash R"
+                loading="lazy"
+                decoding="async"
+                className="profile-orbit__portrait absolute left-1/2 top-1/2 z-10 h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-live/50 object-cover object-top"
+              />
             </div>
           </Reveal>
 
@@ -479,22 +464,21 @@ export function About() {
             ))}
 
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
-              <Info title="Career interests" items={profile.interests} />
-              <Info title="Technical interests" items={profile.technical} />
+              <Info title={portfolioCopy.about.careerInterests} items={profile.interests} />
+              <Info title={portfolioCopy.about.technicalInterests} items={profile.technical} />
 
               <Info
-                title="Education"
-                items={[
-                  "BE, Computer Science & Engineering",
-                  "Diploma, Electronics & Communication",
-                ]}
+                title={portfolioCopy.about.education}
+                items={education
+                  .filter((item) => item.tag !== "Training")
+                  .map((item) => `${item.title} — ${item.place}`)}
               />
 
               <Info
-                title="Training"
-                items={[
-                  "ML & Data Science — Boston Institute of Analytics, Bengaluru",
-                ]}
+                title={portfolioCopy.about.training}
+                items={education
+                  .filter((item) => item.tag === "Training")
+                  .map((item) => `${item.title} — ${item.place}`)}
               />
             </div>
           </Reveal>
@@ -526,182 +510,77 @@ function Info({
   );
 }
 
-/* ---------- skills constellation ---------- */
+/* ---------- skills ---------- */
 
 export function Skills() {
-  const [sel, setSel] = useState(skills[1]!.id);
-  const W = 600;
-  const H = 420;
-
-  const centers = skills.map((s, i) => {
-    const a = (i / skills.length) * Math.PI * 2 - Math.PI / 2;
-
-    return {
-      ...s,
-      x: W / 2 + Math.cos(a) * 170,
-      y: H / 2 + Math.sin(a) * 150,
-    };
-  });
-
-  const active =
-    centers.find((c) => c.id === sel) ?? centers[0]!;
+  const [selected, setSelected] = useState(skills[0]!.id);
 
   return (
     <section
       id="skills"
-      className="relative px-6 py-32 md:px-14"
+      className="relative px-6 py-24 md:px-14 md:py-32"
     >
       <div className="mx-auto max-w-7xl">
         <Heading
-          eyebrow="World 03 · The Neural Constellation"
-          title="Skills"
+          eyebrow={portfolioCopy.skills.eyebrow}
+          title={portfolioCopy.skills.title}
         />
 
-        <div className="grid items-center gap-8 lg:grid-cols-[1.4fr_1fr]">
-          <Reveal>
-            <svg
-              viewBox={`0 0 ${W} ${H}`}
-              className="w-full"
-              role="group"
-              aria-label="Skill constellation"
-            >
-              {centers.map((a, i) =>
-                centers.slice(i + 1).map((b) => (
-                  <line
-                    key={a.id + b.id}
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
-                    className="stroke-live"
-                    strokeOpacity={
-                      a.id === sel || b.id === sel ? 0.5 : 0.08
-                    }
-                    style={{ transition: "stroke-opacity .5s" }}
-                  />
-                )),
-              )}
+        <p className="mb-8 max-w-2xl text-muted-foreground md:text-lg">
+          {portfolioCopy.skills.introduction}
+        </p>
 
-              {active.items.map((it, k) => {
-                const a =
-                  (k / active.items.length) * Math.PI * 2;
-                const x = active.x + Math.cos(a) * 62;
-                const y = active.y + Math.sin(a) * 62;
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {skills.map((category, index) => {
+            const Icon = SKILL_ICONS[category.id];
+            const active = category.id === selected;
 
-                return (
-                  <g key={sel + it}>
-                    <line
-                      x1={active.x}
-                      y1={active.y}
-                      x2={x}
-                      y2={y}
-                      className="stroke-live"
-                      strokeDasharray="70"
-                      strokeDashoffset="70"
-                      style={{
-                        animation: `dash .6s ${k * 60}ms forwards`,
-                      }}
-                    />
-
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r="4"
-                      className="fill-amber"
-                    />
-                  </g>
-                );
-              })}
-
-              {centers.map((c) => (
-                <g
-                  key={c.id}
-                  tabIndex={0}
-                  role="button"
-                  aria-pressed={c.id === sel}
-                  aria-label={c.label}
-                  onClick={() => {
-                    setSel(c.id);
-                    play("select");
-                  }}
-                  onKeyDown={(e) =>
-                    (e.key === "Enter" || e.key === " ") &&
-                    (e.preventDefault(),
-                    setSel(c.id),
-                    play("select"))
-                  }
-                  className="cursor-pointer outline-none [&:focus-visible>circle]:stroke-foreground"
-                  style={{
-                    opacity: c.id === sel ? 1 : 0.55,
-                    transition: "opacity .4s",
-                  }}
-                >
-                  <circle
-                    cx={c.x}
-                    cy={c.y}
-                    r={c.id === sel ? 26 : 18}
-                    className="fill-background stroke-live"
-                    strokeWidth="2"
-                    style={{ transition: "r .4s" }}
-                  />
-
-                  <circle
-                    cx={c.x}
-                    cy={c.y}
-                    r="6"
-                    className="fill-live"
-                  />
-
-                  <text
-                    x={c.x}
-                    y={c.y + 46}
-                    textAnchor="middle"
-                    className="fill-foreground font-mono text-[12px] tracking-widest"
-                  >
-                    {c.label.toUpperCase()}
-                  </text>
-                </g>
-              ))}
-            </svg>
-          </Reveal>
-
-          <Reveal delay={150} className="panel p-8">
-            <div className="eyebrow mb-3">Selected node</div>
-
-            <h3 className="mb-6 text-3xl font-semibold">
-              {active.label}
-            </h3>
-
-            <ul className="flex flex-wrap gap-2">
-              {active.items.map((i) => (
-                <li
-                  key={i}
-                  className="rounded-full border border-live/40 bg-live-soft px-3 py-1.5 text-sm"
-                >
-                  {i}
-                </li>
-              ))}
-            </ul>
-
-            <div className="mt-8 flex flex-wrap gap-2 lg:hidden">
-              {skills.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => {
-                    setSel(s.id);
-                    play("select");
-                  }}
-                  className={`rounded-full px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${
-                    s.id === sel
-                      ? "bg-live text-primary-foreground"
-                      : "border border-border"
+            return (
+              <Reveal key={category.id} delay={index * 70}>
+                <article
+                  className={`group h-full rounded-2xl border bg-card/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-live/40 hover:bg-card/90 md:p-6 ${
+                    active
+                      ? "border-live/35 shadow-[0_18px_48px_-32px_var(--live)]"
+                      : "border-border/80"
                   }`}
                 >
-                  {s.label}
-                </button>
-              ))}
-            </div>
-          </Reveal>
+                  <button
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => {
+                      setSelected(category.id);
+                      play("select");
+                    }}
+                    className="flex min-h-11 w-full items-center gap-3 text-left"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-live-soft text-live transition-transform duration-300 group-hover:scale-105">
+                      <Icon aria-hidden="true" className="h-5 w-5" />
+                    </span>
+                    <span className="flex-1 font-display text-lg font-semibold">
+                      {category.label}
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className={`h-2 w-2 rounded-full transition-colors ${
+                        active ? "bg-live" : "bg-muted-foreground/40"
+                      }`}
+                    />
+                  </button>
+
+                  <ul className="mt-5 flex flex-wrap gap-2">
+                    {category.items.map((item) => (
+                      <li
+                        key={item}
+                        className="rounded-lg border border-border/80 bg-background/50 px-2.5 py-1.5 text-xs leading-relaxed text-foreground/80"
+                      >
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              </Reveal>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -717,6 +596,14 @@ const ICONS = {
   speech: MessageSquareText,
 };
 
+const SKILL_ICONS = {
+  python: CodeXml,
+  ml: BrainCircuit,
+  ds: ChartNoAxesColumnIncreasing,
+  nlp: MessageSquareText,
+  tools: Wrench,
+} satisfies Record<SkillCategory["id"], typeof CodeXml>;
+
 function Installation({
   p,
   onVideo,
@@ -726,134 +613,177 @@ function Installation({
 }) {
   const [open, setOpen] = useState(false);
   const Icon = ICONS[p.shape];
-  const flip = Number(p.index) % 2 === 0;
+  const reverse = Number(p.index) % 2 === 0;
 
   return (
-    <Reveal
-      className={`relative grid items-center gap-8 md:grid-cols-2 ${
-        flip ? "md:[&>*:first-child]:order-2" : ""
-      }`}
-    >
-      <div className="relative flex aspect-[4/3] items-center justify-center [perspective:900px]">
-        <div className="absolute bottom-6 h-10 w-3/4 rounded-[50%] bg-live/20 blur-2xl" />
+    <Reveal>
+      <article
+        className={`group grid items-center gap-6 md:grid-cols-2 md:gap-12 xl:gap-20 ${
+          reverse ? "md:[&>div:first-child]:order-2" : ""
+        }`}
+      >
+        <div className="project-art relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-[2rem] border border-border/70 bg-[radial-gradient(ellipse_at_50%_55%,var(--live-soft),transparent_68%)] p-4 sm:p-6">
+          <span className="absolute left-5 top-5 z-10 rounded-full border border-border/70 bg-background/70 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground backdrop-blur">
+            {p.index} <span className="mx-1.5 text-live">/</span> {p.kind}
+          </span>
 
-        {p.hasVideo ? (
-          <button
-            onClick={() => {
-              play("open");
-              onVideo();
-            }}
-            className="group panel relative w-full overflow-hidden p-2"
-            aria-label="Play Used Car Price Estimation demo video"
-          >
-            <img
-              src={poster.url}
-              alt="Used Car Price Estimation app screenshot"
-              loading="lazy"
-              className="aspect-video w-full rounded object-cover opacity-80 transition group-hover:opacity-100"
-            />
-
-            <span className="absolute inset-0 flex items-center justify-center">
-              <span className="flex h-16 w-16 items-center justify-center rounded-full bg-live text-primary-foreground shadow-[0_0_50px_-5px_var(--live)] transition group-hover:scale-110">
-                <Play className="ml-1 h-6 w-6" />
-              </span>
-            </span>
-
-            <span className="absolute left-4 top-4 font-mono text-[10px] tracking-[0.25em] text-silver">
-              CINEMA · DEMO
-            </span>
-          </button>
-        ) : p.shape === "clusters" ? (
-          <ClusterViz />
-        ) : (
-          <div className="floaty relative h-48 w-48 [transform-style:preserve-3d]">
-            {[0, 60, 120].map((r) => (
-              <div
-                key={r}
-                className="absolute inset-0 rounded-full border border-live/50"
-                style={{
-                  transform: `rotateY(${r}deg) rotateX(70deg)`,
-                }}
-              />
-            ))}
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Icon
-                className="h-16 w-16 text-live"
-                strokeWidth={1.2}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div>
-        <div className="mb-3 flex items-center gap-4 font-mono text-xs tracking-[0.25em] text-muted-foreground">
-          <span className="text-4xl font-light text-live">
-            {p.index}
-          </span>{" "}
-          {p.kind.toUpperCase()}
-        </div>
-
-        <h3 className="mb-4 text-3xl font-semibold md:text-4xl">
-          {p.title}
-        </h3>
-
-        <p className="mb-6 max-w-lg leading-relaxed text-muted-foreground">
-          {p.summary}
-        </p>
-
-        <div className="flex flex-wrap gap-3">
-          <a
-            href={p.github}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => play("click")}
-            className="btn-live"
-          >
-            <GithubIcon /> GitHub
-          </a>
-
-          <button
-            onClick={() => {
-              setOpen(!open);
-              play(open ? "close" : "select");
-            }}
-            aria-expanded={open}
-            className="btn-ghost"
-          >
-            {open ? "Hide details" : "Details"}
-          </button>
-
-          {p.backend && (
-            <a
-              href={p.backend}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-ghost"
+          {p.hasVideo ? (
+            <button
+              onClick={() => {
+                play("open");
+                onVideo();
+              }}
+              className="relative h-full w-full overflow-hidden rounded-2xl border border-border/60 bg-background/50 text-left"
+              aria-label={`${portfolioCopy.projects.demo}: play video`}
             >
-              <ExternalLink className="h-4 w-4" /> Backend
-            </a>
+              <img
+                src={poster}
+                alt={`${p.title} application screenshot`}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover object-center opacity-85 transition duration-500 group-hover:scale-[1.03] group-hover:opacity-100"
+              />
+
+              <span className="absolute inset-0 flex items-center justify-center bg-background/10">
+                <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/25 bg-live text-primary-foreground shadow-[0_0_40px_-8px_var(--live)] transition-transform duration-300 group-hover:scale-110">
+                  <Play aria-hidden="true" className="ml-1 h-5 w-5" />
+                </span>
+              </span>
+            </button>
+          ) : p.shape === "clusters" ? (
+            <ClusterViz />
+          ) : (
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-background/20">
+              {p.shape === "plane" ? (
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 420 300"
+                  className="absolute inset-0 h-full w-full text-live"
+                  fill="none"
+                >
+                  <path d="M38 226C104 205 123 87 211 108s100 111 171 14" stroke="currentColor" strokeOpacity=".42" strokeWidth="1.5" strokeDasharray="5 8" />
+                  <circle cx="38" cy="226" r="5" fill="currentColor" />
+                  <circle cx="211" cy="108" r="5" fill="currentColor" />
+                  <circle cx="382" cy="122" r="5" fill="currentColor" />
+                  <path d="M45 252h330" stroke="currentColor" strokeOpacity=".12" />
+                </svg>
+              ) : (
+                <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center gap-2">
+                  {["TEXT", "TOKENS", "SENTIMENT"].map((token, index) => (
+                    <span
+                      key={token}
+                      className={`rounded-full border px-2 py-1 font-mono text-[9px] tracking-[0.12em] ${
+                        index === 1
+                          ? "border-live/45 bg-live-soft text-live"
+                          : "border-border/80 bg-background/65 text-muted-foreground"
+                      }`}
+                      style={{ transform: `translateY(${index === 1 ? "-1.5rem" : "1.25rem"})` }}
+                    >
+                      {token}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {[0, 1, 2].map((ring) => (
+                <div
+                  key={ring}
+                  aria-hidden="true"
+                  className="absolute aspect-square rounded-full border border-live/30 transition-transform duration-700 group-hover:rotate-12"
+                  style={{
+                    width: `${48 + ring * 18}%`,
+                    transform: `rotate(${ring * 40}deg)`,
+                  }}
+                />
+              ))}
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-live/30 bg-background/80 text-live shadow-[0_0_52px_-20px_var(--live)] transition-transform duration-500 group-hover:scale-110">
+                <Icon aria-hidden="true" className="h-9 w-9" strokeWidth={1.4} />
+              </div>
+            </div>
           )}
         </div>
 
-        <div
-          className={`grid transition-all duration-500 ${
-            open
-              ? "mt-6 grid-rows-[1fr] opacity-100"
-              : "grid-rows-[0fr] opacity-0"
-          }`}
-        >
-          <ul className="panel space-y-2 overflow-hidden p-0 text-sm text-foreground/85 [&>li]:px-5 first:[&>li]:pt-5 last:[&>li]:pb-5">
-            {p.details.map((d) => (
-              <li key={d}>
-                <span className="mr-2 text-amber">◆</span>
-                {d}
-              </li>
-            ))}
-          </ul>
+        <div className="relative py-3 md:py-8">
+          <div className="eyebrow mb-3">
+            {p.kind}
+          </div>
+          <h3 className="mb-3 text-2xl font-semibold leading-snug md:text-3xl xl:text-4xl">
+            {p.title}
+          </h3>
+
+          <p className="mb-6 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            {p.summary}
+          </p>
+
+          {p.highlights && (
+            <ul className="mb-6 flex flex-wrap gap-2">
+              {p.highlights.map((highlight) => (
+                <li
+                  key={highlight}
+                  className="rounded-lg border border-live/20 bg-live-soft/60 px-3 py-2 font-mono text-xs text-foreground/90"
+                >
+                  {highlight}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className="flex flex-wrap gap-2">
+            <a
+              href={p.github}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => play("click")}
+              className="btn-live"
+            >
+              <GithubIcon /> {portfolioCopy.projects.repository}
+            </a>
+
+            <button
+              onClick={() => {
+                setOpen(!open);
+                play(open ? "close" : "select");
+              }}
+              aria-expanded={open}
+              className="btn-ghost"
+            >
+              {open
+                ? portfolioCopy.projects.hideDetails
+                : portfolioCopy.projects.details}
+            </button>
+
+            {p.backend && (
+              <a
+                href={p.backend}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-ghost"
+              >
+                <ExternalLink aria-hidden="true" className="h-4 w-4" /> {portfolioCopy.projects.backend}
+              </a>
+            )}
+          </div>
+
+          <div
+            className={`grid transition-all duration-300 ${
+              open
+                ? "mt-5 grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <ul
+              aria-hidden={!open}
+              className="space-y-2 overflow-hidden rounded-xl border border-border/70 bg-background/40 p-0 text-sm text-foreground/85 [&>li]:px-4 first:[&>li]:pt-4 last:[&>li]:pb-4"
+            >
+              {p.details.map((detail) => (
+                <li key={detail}>
+                  <span aria-hidden="true" className="mr-2 text-live">•</span>
+                  {detail}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
+      </article>
     </Reveal>
   );
 }
@@ -876,9 +806,9 @@ function ClusterViz() {
   return (
     <svg
       viewBox="0 0 360 260"
-      className="panel w-full p-4"
+      className="w-full p-4"
       role="img"
-      aria-label="Illustrative K-means customer segments"
+      aria-label={portfolioCopy.projects.illustrativeClusters}
     >
       {clusters.map((c, ci) => (
         <g
@@ -929,7 +859,7 @@ function ClusterViz() {
         y="250"
         className="fill-muted-foreground font-mono text-[8px]"
       >
-        ILLUSTRATIVE · NOT REAL DATA
+        {portfolioCopy.projects.illustrativeData.toUpperCase()}
       </text>
     </svg>
   );
@@ -943,20 +873,19 @@ export function Projects({
   return (
     <section
       id="projects"
-      className="relative px-6 py-32 md:px-14"
+      className="relative px-6 py-24 md:px-14 md:py-32"
     >
       <div className="mx-auto max-w-7xl">
         <Heading
-          eyebrow="World 04 · The Project Exhibition"
-          title="Selected projects"
+          eyebrow={portfolioCopy.projects.eyebrow}
+          title={portfolioCopy.projects.title}
         />
 
-        <div className="relative space-y-28">
+        <div className="space-y-16 md:space-y-24">
           <div
-            aria-hidden
-            className="absolute bottom-0 left-1/2 top-0 hidden w-px bg-gradient-to-b from-transparent via-live/40 to-transparent md:block"
+            aria-hidden="true"
+            className="absolute bottom-32 left-1/2 top-56 hidden w-px bg-gradient-to-b from-transparent via-live/25 to-transparent md:block"
           />
-
           {projects.map((p) => (
             <Installation
               key={p.id}
@@ -976,63 +905,44 @@ export function Education() {
   return (
     <section
       id="education"
-      className="relative px-6 py-32 md:px-14"
+      className="relative px-6 py-24 md:px-14 md:py-32"
     >
       <div className="mx-auto max-w-5xl">
         <Heading
-          eyebrow="World 05 · The Digital Journey"
-          title="Education"
+          eyebrow={portfolioCopy.education.eyebrow}
+          title={portfolioCopy.education.title}
         />
 
-        <ol className="relative">
-          <svg
-            aria-hidden
-            className="absolute left-4 top-0 h-full w-16 md:left-1/2 md:-translate-x-1/2"
-            viewBox="0 0 60 600"
-            preserveAspectRatio="none"
-          >
-            <path
-              d="M30 0 C 60 150, 0 300, 30 450 S 30 600, 30 600"
-              className="fill-none stroke-live"
-              strokeOpacity=".5"
-              strokeWidth="2"
-              vectorEffect="non-scaling-stroke"
-            />
-          </svg>
-
+        <ol className="relative space-y-4 before:absolute before:bottom-8 before:left-[0.6875rem] before:top-8 before:w-px before:bg-gradient-to-b before:from-live/60 before:via-live/20 before:to-transparent">
           {education.map((e, i) => (
             <li
               key={e.title}
-              className={`relative mb-16 pl-16 md:w-1/2 md:pl-0 ${
-                i % 2
-                  ? "md:ml-auto md:pl-14"
-                  : "md:pr-14 md:text-right"
-              }`}
+              className="relative pl-10"
             >
               <span
-                className={`absolute left-[26px] top-6 h-4 w-4 rounded-full bg-live shadow-[0_0_24px_var(--live)] ${
-                  i % 2
-                    ? "md:-left-2"
-                    : "md:-right-2 md:left-auto"
-                }`}
+                aria-hidden="true"
+                className="absolute left-2 top-7 h-3 w-3 rounded-full border-2 border-background bg-live shadow-[0_0_18px_var(--live)]"
               />
 
-              <Reveal delay={i * 100} className="panel p-6">
-                <div className="eyebrow mb-2 !text-amber">
-                  {e.tag} · {e.when}
-                </div>
+              <Reveal delay={i * 70}>
+                <article className="rounded-2xl border border-border/80 bg-card/55 p-5 transition-colors duration-300 hover:border-live/35 hover:bg-card/80 sm:p-6">
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <span className="rounded-full border border-live/25 bg-live-soft px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-live">
+                      {e.tag}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {e.when}
+                    </span>
+                  </div>
 
-                <h3 className="text-xl font-semibold">{e.title}</h3>
-
-                <p className="mt-1 text-muted-foreground">
-                  {e.place}
-                </p>
-
-                {e.sub && (
-                  <p className="text-sm text-muted-foreground">
-                    {e.sub}
+                  <h3 className="text-lg font-semibold sm:text-xl">{e.title}</h3>
+                  <p className="mt-1 text-sm text-foreground/80 sm:text-base">
+                    {e.place}
                   </p>
-                )}
+                  {e.sub && (
+                    <p className="mt-1 text-sm text-muted-foreground">{e.sub}</p>
+                  )}
+                </article>
               </Reveal>
             </li>
           ))}
@@ -1048,25 +958,26 @@ export function Contact() {
   return (
     <section
       id="contact"
-      className="relative flex min-h-screen items-center px-6 py-32 md:px-14"
+      className="relative px-6 py-24 md:px-14 md:py-32"
     >
-      <div className="mx-auto max-w-3xl text-center">
-        <Reveal>
-          <div className="eyebrow mb-6">
-            World 06 · The Connection Portal
-          </div>
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-live/20 bg-card/60 shadow-[0_32px_90px_-54px_var(--live)]">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,var(--live-soft),transparent_55%)]"
+        />
+        <Reveal className="relative px-6 py-12 text-center sm:px-10 sm:py-16 md:px-16 md:py-20">
+          <div className="eyebrow mb-5">{portfolioCopy.contact.eyebrow}</div>
 
-          <h2 className="text-4xl font-semibold md:text-7xl">
-            Let's build something{" "}
-            <span className="light-sweep">intelligent.</span>
+          <h2 className="mx-auto max-w-4xl text-4xl font-semibold leading-tight sm:text-5xl md:text-7xl">
+            {portfolioCopy.contact.titlePrefix}{" "}
+            <span className="light-sweep">{portfolioCopy.contact.titleAccent}</span>
           </h2>
 
-          <p className="mx-auto mt-6 max-w-xl text-muted-foreground">
-            I'm looking for Machine Learning, AI/ML, NLP and Data Science
-            internship opportunities. Thanks for exploring — let's connect.
+          <p className="mx-auto mt-6 max-w-2xl leading-relaxed text-muted-foreground md:text-lg">
+            {portfolioCopy.contact.introduction}
           </p>
 
-          <div className="mt-10 flex flex-wrap justify-center gap-4">
+          <div className="mt-9 flex flex-wrap justify-center gap-3">
             <a
               href={profile.github}
               target="_blank"
@@ -1074,7 +985,7 @@ export function Contact() {
               onClick={() => play("click")}
               className="btn-live"
             >
-              <GithubIcon /> GitHub
+              <GithubIcon /> {portfolioCopy.contact.github}
             </a>
 
             <a
@@ -1088,18 +999,16 @@ export function Contact() {
             </a>
           </div>
 
-          <button
-            onClick={() => {
-              play("click");
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="mt-20 inline-flex flex-col items-center gap-2 font-mono text-[10px] tracking-[0.3em] text-muted-foreground hover:text-live"
+          <a
+            href="#home"
+            onClick={() => play("click")}
+            className="mt-12 inline-flex min-h-11 items-center gap-2 font-mono text-[10px] tracking-[0.2em] text-muted-foreground transition-colors hover:text-live"
           >
-            <ArrowUp className="h-4 w-4" /> BACK TO TOP
-          </button>
+            <ArrowUp aria-hidden="true" className="h-4 w-4" /> {portfolioCopy.contact.backToTop}
+          </a>
 
-          <p className="mt-10 font-mono text-[10px] tracking-[0.2em] text-muted-foreground">
-            © {new Date().getFullYear()} AKASH R — THE AI UNIVERSE
+          <p className="mt-8 border-t border-border/70 pt-6 font-mono text-[10px] tracking-[0.16em] text-muted-foreground">
+            © {new Date().getFullYear()} AKASH R · {portfolioCopy.contact.footer.toUpperCase()}
           </p>
         </Reveal>
       </div>

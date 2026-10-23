@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { profile } from "../content/portfolio";
 
 function NotFoundComponent() {
   return (
@@ -78,10 +79,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Akash R — The AI Universe" },
+      { title: profile.site },
       { name: "description", content: "Portfolio of Akash R, aspiring Machine Learning Engineer." },
       { name: "author", content: "Akash R" },
-      { property: "og:title", content: "Akash R — The AI Universe" },
+      { property: "og:title", content: profile.site },
       { property: "og:description", content: "Portfolio of Akash R, aspiring Machine Learning Engineer." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

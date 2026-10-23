@@ -1,6 +1,6 @@
 // Subtle synthesized UI sounds. No music, nothing before user interaction.
 let ctx: AudioContext | null = null;
-let muted = false;
+let muted = true;
 const subs = new Set<(m: boolean) => void>();
 
 function getStorage(): Storage | null {
@@ -14,9 +14,11 @@ function getStorage(): Storage | null {
 }
 
 try {
-  muted = getStorage()?.getItem("ui-muted") === "1";
+  if (getStorage()?.getItem("ui-muted") === "0") {
+    muted = false;
+  }
 } catch {
-  muted = false;
+  // Keep the default muted state when storage cannot be read.
 }
 
 export const isMuted = () => muted;
