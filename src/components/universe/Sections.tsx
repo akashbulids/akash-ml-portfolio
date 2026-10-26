@@ -16,13 +16,15 @@ import {
   CodeXml,
   Wrench,
   Server,
-  Database,
   Menu,
   X,
 } from "lucide-react";
 
 import photo from "../../../assets-originals/akash-optimized.webp?url";
 import poster from "../../../assets-originals/used-car-poster.jpg?url";
+import airlinePoster from "@/assets/airline-passenger-satisfaction.png";
+import segmentsPoster from "@/assets/credit-card-customer-segmentation.png";
+import sentimentPoster from "@/assets/mcdonalds-sentiment-cover.png";
 import {
   profile,
   skills,
@@ -436,7 +438,7 @@ export function Hero() {
               rel="noreferrer"
               className="inline-flex min-h-11 items-center gap-2 transition-colors hover:text-live"
             >
-              <GithubIcon /> GitHub
+              <GithubIcon /> View GitHub
             </a>
             <a
               href={profile.linkedin}
@@ -655,13 +657,18 @@ const ICONS = {
   speech: MessageSquareText,
 };
 
+const PROJECT_VISUALS = {
+  airline: airlinePoster,
+  segments: segmentsPoster,
+  sentiment: sentimentPoster,
+} satisfies Record<NonNullable<Project["visual"]>, string>;
+
 const SKILL_ICONS = {
   programming: CodeXml,
   libraries: ChartNoAxesColumnIncreasing,
   ml: BrainCircuit,
   nlp: MessageSquareText,
   deployment: Server,
-  databases: Database,
   tools: Wrench,
 } satisfies Record<SkillCategory["id"], typeof CodeXml>;
 
@@ -711,6 +718,16 @@ function Installation({
                 </span>
               </span>
             </button>
+          ) : p.visual ? (
+            <div className="relative flex h-full w-full items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-background/20">
+              <img
+                src={PROJECT_VISUALS[p.visual]}
+                alt={p.visualAlt ?? `${p.title} project poster`}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-contain"
+              />
+            </div>
           ) : p.shape === "clusters" ? (
             <ClusterViz />
           ) : (
@@ -761,7 +778,7 @@ function Installation({
               </div>
             </div>
           )}
-          {!p.hasVideo && p.shape !== "clusters" && (
+          {!p.hasVideo && !p.visual && p.shape !== "clusters" && (
             <span className="absolute bottom-6 right-7 rounded-sm border border-border/70 bg-background/80 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.1em] text-muted-foreground">
               {portfolioCopy.projects.illustrativeData}
             </span>
@@ -834,6 +851,16 @@ function Installation({
                 className="btn-ghost"
               >
                 <ExternalLink aria-hidden="true" className="h-4 w-4" /> {portfolioCopy.projects.backend}
+              </a>
+            )}
+            {p.liveDemo && (
+              <a
+                href={p.liveDemo}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-ghost"
+              >
+                <ExternalLink aria-hidden="true" className="h-4 w-4" /> {portfolioCopy.projects.liveDemo}
               </a>
             )}
           </div>

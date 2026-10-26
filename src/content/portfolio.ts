@@ -5,10 +5,10 @@ export const profile = {
   headline: "Aspiring Machine Learning Engineer",
   roles: ["Machine Learning Engineer", "NLP Engineer", "AI Application Developer", "Data Science Enthusiast"],
   location: "Bengaluru, India",
-  intro: "I build practical machine learning applications, explore natural language processing, and turn data-driven ideas into useful software.",
+  intro: "I build practical machine learning solutions from data to deployment, with hands-on project experience in predictive modeling, NLP, and model-backed applications.",
   about: [
-    "I’m an aspiring Machine Learning Engineer focused on developing practical machine learning applications, exploring natural language processing, and building end-to-end data-driven solutions.",
-    "I have completed Machine Learning and Data Science training at Boston Institute of Analytics, Bengaluru, and have developed projects involving prediction, customer segmentation, sentiment analysis, and machine-learning applications.",
+    "I’m an aspiring Machine Learning Engineer with hands-on project experience in predictive modeling, classification, regression, and customer segmentation.",
+    "My work also explores NLP and deep learning, model evaluation, and deploying practical ML applications with FastAPI and Streamlit. I completed Machine Learning and Data Science training at Boston Institute of Analytics, Bengaluru.",
   ],
   github: "https://github.com/akashbulids",
   linkedin: "https://www.linkedin.com/in/akash-r-259945425/",
@@ -28,11 +28,11 @@ export const portfolioCopy = {
     roleLabel: "Exploring",
     titleLines: ["AKASH", "R.", "BUILDING", "INTELLIGENCE."],
     accessibleTitle: "Akash R. Building intelligence.",
-    statement: "Machine Learning / NLP / Data-Driven Applications",
+    statement: "Building Machine Learning Solutions from Data to Deployment",
     visualCode: ["# model.py", "from sklearn import ensemble", "model.fit(X_train, y_train)", "→ ready to predict"],
     signalLabel: "Signal",
-    viewProjects: "Explore my work",
-    contact: "Contact me",
+    viewProjects: "Explore Projects",
+    contact: "Contact Me",
     scroll: "Scroll",
   },
   about: {
@@ -59,6 +59,7 @@ export const portfolioCopy = {
     details: "Project details",
     hideDetails: "Hide details",
     backend: "Live backend",
+    liveDemo: "Live demo",
     demo: "Demo · Used Car Price Estimation",
     illustrativeClusters: "Illustrative visualization of hypothetical K-means customer segments",
     illustrativeData: "Illustrative artwork · not a project screenshot",
@@ -100,42 +101,37 @@ export const portfolioCopy = {
 };
 
 export type SkillCategory = {
-  id: "programming" | "libraries" | "ml" | "nlp" | "deployment" | "databases" | "tools";
+  id: "programming" | "libraries" | "ml" | "nlp" | "deployment" | "tools";
   label: string;
   items: string[];
 };
 export const skills: SkillCategory[] = [
   { id: "programming", label: "Programming Languages", items: ["Python", "SQL"] },
-  { id: "libraries", label: "Python Libraries", items: ["NumPy", "Pandas", "Matplotlib", "Seaborn"] },
+  { id: "libraries", label: "Data Processing", items: ["NumPy", "Pandas"] },
   {
     id: "ml",
     label: "Machine Learning",
     items: [
       "Scikit-learn",
-      "Linear Regression",
-      "Logistic Regression",
-      "Decision Trees",
-      "Random Forest",
-      "Gradient Boosting",
-      "K-Means Clustering",
+      "Regression",
+      "Classification",
+      "Clustering",
       "Feature Engineering",
       "Model Evaluation",
       "Hyperparameter Tuning",
-      "SMOTE",
     ],
   },
   {
     id: "nlp",
     label: "Deep Learning & NLP",
-    items: ["TensorFlow", "Keras", "RNN", "LSTM", "Natural Language Processing (NLP)", "Sentiment Analysis", "Text Preprocessing"],
+    items: ["TensorFlow", "Keras", "RNN", "LSTM", "Natural Language Processing"],
   },
   {
     id: "deployment",
-    label: "Backend Development & Deployment",
-    items: ["FastAPI", "Streamlit", "REST APIs", "Model Deployment", "Render Deployment"],
+    label: "Deployment",
+    items: ["FastAPI", "Streamlit", "REST APIs", "Render"],
   },
-  { id: "databases", label: "Databases", items: ["SQL", "Data Querying", "Data Cleaning"] },
-  { id: "tools", label: "Developer Tools", items: ["Git", "GitHub", "Jupyter Notebook", "VS Code"] },
+  { id: "tools", label: "Tools", items: ["Git", "GitHub", "Jupyter Notebook"] },
 ];
 
 export type Project = {
@@ -148,8 +144,11 @@ export type Project = {
   highlights?: string[];
   technologies: string[];
   github: string;
+  liveDemo?: string;
   backend?: string;
   hasVideo?: boolean;
+  visual?: "airline" | "segments" | "sentiment";
+  visualAlt?: string;
   shape: "car" | "plane" | "clusters" | "speech";
 };
 
@@ -159,10 +158,19 @@ export const projects: Project[] = [
     index: "01",
     title: "Used Car Price Estimation",
     kind: "Regression · Prediction app",
-    summary: "Estimates a used car's price from its specifications through a React interface connected to a FastAPI prediction backend.",
-    details: ["Regression task: predicting a continuous price", "React frontend integrated with a FastAPI backend", "Backend hosted on Render"],
-    technologies: ["Python", "Pandas", "Scikit-learn", "FastAPI", "React"],
+    summary: "Predicts used-car prices from vehicle specifications and condition through a React application connected to a FastAPI backend.",
+    details: [
+      "Objective: estimate used-car prices from vehicle specifications and condition.",
+      "Dataset: approximately 10,000 records and 12 columns, with price_usd as the target (project README).",
+      "Method: exploratory analysis and preprocessing for numerical and categorical features; multiple regression models were compared.",
+      "Models evaluated: Random Forest, Decision Tree, Linear Regression, AdaBoost, and Gradient Boosting regressors (training notebook).",
+      "Best model: Linear Regression; the training notebook reports test R² ≈0.8766 and mean cross-validation R² ≈0.8698.",
+      "Application: React frontend integrated with a FastAPI prediction backend. Optional LLM explanations require configured credentials.",
+      "Deployment: frontend and backend are hosted on Render.",
+    ],
+    technologies: ["Python", "Pandas", "Scikit-learn", "Linear Regression", "FastAPI", "React"],
     github: "https://github.com/akashbulids/Used-Car-Price-Estimation",
+    liveDemo: "https://used-car-price-estimation.onrender.com",
     backend: "https://used-car-price-estimation-backed.onrender.com",
     hasVideo: true,
     shape: "car",
@@ -172,11 +180,21 @@ export const projects: Project[] = [
     index: "02",
     title: "Airline Passenger Satisfaction",
     kind: "Classification",
-    summary: "Predicts passenger satisfaction from passenger, flight, and service-rating data using supervised classification.",
-    details: ["Data cleaning, exploratory analysis, outlier handling, and preprocessing", "Compared multiple classifiers and tuned a Random Forest model", "Evaluation includes accuracy, class-level F1, and ROC-AUC; deployed with Streamlit"],
-    technologies: ["Python", "Scikit-learn", "Random Forest", "Streamlit"],
-    highlights: ["README-reported accuracy: 95%", "README-reported ROC-AUC: 0.961"],
+    summary: "Predicts whether airline passengers are satisfied or neutral/dissatisfied using passenger, flight, and service-rating data.",
+    details: [
+      "Objective: classify passenger satisfaction from demographic, flight, and service-rating features.",
+      "Dataset: 129,880 rows in the repository's raw CSV; Kaggle is listed as the source in the project README.",
+      "Method: exploratory analysis, duplicate and missing-value handling, outlier detection, categorical encoding, numerical scaling, and a preprocessing pipeline.",
+      "Models evaluated in the training notebook: Logistic Regression, Decision Tree, Random Forest, Gradient Boosting, AdaBoost, and KNN.",
+      "Best model: Random Forest Classifier.",
+      "Evaluation: the training notebook records test accuracy ≈96.38% and mean 5-fold cross-validation accuracy ≈96.29%.",
+      "Deployment: Streamlit deployment is documented in the repository, but no public demo URL is listed.",
+    ],
+    technologies: ["Python", "Pandas", "NumPy", "Scikit-learn", "Random Forest", "Streamlit"],
+    highlights: ["Notebook test accuracy: 96.38%", "5-fold CV accuracy: 96.29%"],
     github: "https://github.com/akashbulids/Airline-passenger-satisfaction-prediction-project",
+    visual: "airline",
+    visualAlt: "Airline passenger satisfaction machine-learning project poster",
     shape: "plane",
   },
   {
@@ -184,11 +202,19 @@ export const projects: Project[] = [
     index: "03",
     title: "Credit Card Customer Segmentation",
     kind: "Unsupervised · K-means",
-    summary: "Uses K-means to group credit card customers by spending and usage behaviour, with segment profiling in a Streamlit application.",
-    details: ["Unsupervised learning with K-means", "Four customer segments documented in the repository README", "Streamlit application for the segmentation project"],
-    technologies: ["Python", "K-means", "Streamlit"],
-    highlights: ["4 README-documented segments"],
+    summary: "Segments credit-card customers by spending and usage behaviour to make distinct customer patterns easier to understand.",
+    details: [
+      "Objective: group customers by credit-card usage and spending behaviour.",
+      "Method: clean and scale data, select features, use the elbow method and silhouette score, then apply K-Means.",
+      "Analysis: profile four clusters, with PCA used to visualize the segments.",
+      "Evaluation: the project README reports a silhouette score of approximately 0.50 for K=4.",
+      "Application: Streamlit interface for exploring customer segments.",
+    ],
+    technologies: ["Python", "Pandas", "NumPy", "Scikit-learn", "K-Means", "Streamlit"],
+    highlights: ["4 README-documented segments", "README-reported silhouette score: ≈0.50"],
     github: "https://github.com/akashbulids/credit-card-customer-segmentation-kmeans-ml",
+    visual: "segments",
+    visualAlt: "Credit card customer segmentation project poster",
     shape: "clusters",
   },
   {
@@ -196,10 +222,18 @@ export const projects: Project[] = [
     index: "04",
     title: "McDonald's Sentiment Analysis",
     kind: "NLP",
-    summary: "Analyzes McDonald's customer reviews with NLP and a Bidirectional LSTM sentiment model.",
-    details: ["Bidirectional LSTM model documented in the repository README", "TensorFlow and Streamlit are listed in the project stack", "Text classification of customer reviews"],
+    summary: "Classifies McDonald’s customer reviews by sentiment using NLP preprocessing and a Bidirectional LSTM model.",
+    details: [
+      "Objective: analyze customer reviews and predict sentiment from text.",
+      "Method: text preprocessing and NLP feature preparation followed by text classification with a Bidirectional LSTM.",
+      "Technologies: TensorFlow and Streamlit are listed in the repository project files.",
+      "Evaluation: the repository README has placeholder values for accuracy, precision, recall, and F1; no performance results are reported.",
+      "Demo: the repository documents how to run the Streamlit app locally, but no public demo URL is listed.",
+    ],
     technologies: ["Python", "NLP", "TensorFlow", "Bidirectional LSTM", "Streamlit"],
     github: "https://github.com/akashbulids/mcdonalds-sentiment-analysis",
+    visual: "sentiment",
+    visualAlt: "McDonald's sentiment analysis project poster",
     shape: "speech",
   },
 ];
