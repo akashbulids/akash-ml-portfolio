@@ -1,6 +1,7 @@
 // Subtle synthesized UI sounds. No music, nothing before user interaction.
 let ctx: AudioContext | null = null;
 let muted = true;
+let volume = 0.35;
 const subs = new Set<(m: boolean) => void>();
 
 function getStorage(): Storage | null {
@@ -14,14 +15,23 @@ function getStorage(): Storage | null {
 }
 
 try {
-  if (getStorage()?.getItem("ui-muted") === "0") {
+  const storage = getStorage();
+  if (storage?.getItem("ui-muted") === "0") {
     muted = false;
+  }
+  const storedVolume = storage?.getItem("ui-volume");
+  if (storedVolume !== null && storedVolume !== undefined) {
+    const parsedVolume = Number(storedVolume);
+    if (Number.isFinite(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1) {
+      volume = parsedVolume;
+    }
   }
 } catch {
   // Keep the default muted state when storage cannot be read.
 }
 
 export const isMuted = () => muted;
+export const getVolume = () => volume;
 export function setMuted(m: boolean) {
   muted = m;
   try {
@@ -30,6 +40,15 @@ export function setMuted(m: boolean) {
     // Sound state still works when storage is unavailable or full.
   }
   subs.forEach((s) => s(m));
+}
+export function setVolume(value: number) {
+  if (!Number.isFinite(value)) return;
+  volume = Math.min(1, Math.max(0, value));
+  try {
+    getStorage()?.setItem("ui-volume", String(volume));
+  } catch {
+    // Volume control remains available when storage is unavailable or full.
+  }
 }
 export function onMuted(fn: (m: boolean) => void) {
   subs.add(fn);
@@ -45,7 +64,7 @@ const TONES: Record<Kind, [number, number, number]> = {
 };
 
 export function play(kind: Kind = "click") {
-  if (muted || typeof window === "undefined") return;
+  if (muted || volume === 0 || typeof window === "undefined") return;
   try {
     ctx ??= new AudioContext();
     const [f1, f2, d] = TONES[kind];
@@ -55,7 +74,7 @@ export function play(kind: Kind = "click") {
     o.frequency.setValueAtTime(f1, ctx.currentTime);
     o.frequency.exponentialRampToValueAtTime(f2, ctx.currentTime + d);
     g.gain.setValueAtTime(0.0001, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.04, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.04 * volume, ctx.currentTime + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + d + 0.05);
     o.connect(g).connect(ctx.destination);
     o.start();

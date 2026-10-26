@@ -6,7 +6,7 @@ import {
 } from "react";
 import { BootLoader } from "@/components/universe/BootLoader";
 import { VideoModal } from "@/components/universe/VideoModal";
-import { Nav, Hero, About, Skills, Projects, Education, Contact } from "@/components/universe/Sections";
+import { Nav, Hero, About, Skills, Projects, Pipeline, Education, Contact } from "@/components/universe/Sections";
 import { startThemeEngine } from "@/lib/theme-engine";
 import { profile } from "@/content/portfolio";
 
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: `${profile.site} | Machine Learning Portfolio` },
-      { name: "description", content: "Explore Akash R's machine-learning projects, data science work, and journey toward practical AI applications." },
+      { name: "description", content: "Explore Akash R's machine-learning projects, data science work, and journey building practical AI applications." },
       { property: "og:title", content: profile.site },
       { property: "og:description", content: "A cinematic portfolio of Akash R's machine-learning projects and learning journey." },
       { property: "og:type", content: "website" },
@@ -57,6 +57,7 @@ function Index() {
         <About />
         <Skills />
         <Projects onVideo={() => setVideo(true)} />
+        <Pipeline />
         <Education />
         <Contact />
       </main>

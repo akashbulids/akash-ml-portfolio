@@ -15,6 +15,10 @@ import {
   ChartNoAxesColumnIncreasing,
   CodeXml,
   Wrench,
+  Server,
+  Database,
+  Menu,
+  X,
 } from "lucide-react";
 
 import photo from "../../../assets-originals/akash-optimized.webp?url";
@@ -29,7 +33,7 @@ import {
   type Project,
   type SkillCategory,
 } from "@/content/portfolio";
-import { play, isMuted, setMuted, onMuted } from "@/lib/sound";
+import { play, isMuted, setMuted, onMuted, getVolume, setVolume } from "@/lib/sound";
 import { PALETTES, onPalette, getPaletteIndex } from "@/lib/theme-engine";
 
 function GithubIcon() {
@@ -132,84 +136,163 @@ function Heading({
 
 export function Nav() {
   const [active, setActive] = useState("home");
-  const [muted, setM] = useState(false);
+  const [muted, setM] = useState(true);
+  const [volume, setVolumeValue] = useState(0.35);
   const [pal, setPal] = useState(getPaletteIndex());
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const menuButton = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setM(isMuted());
+    setVolumeValue(getVolume());
 
     const a = onMuted(setM);
     const b = onPalette(setPal);
 
-    const io = new IntersectionObserver(
-      (es) =>
-        es.forEach(
-          (e) => e.isIntersecting && setActive(e.target.id),
-        ),
-      { rootMargin: "-45% 0px -50% 0px" },
-    );
+    const updateScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      setScrolled(window.scrollY > 24);
+      setScrollProgress(maxScroll > 0 ? Math.min(100, (window.scrollY / maxScroll) * 100) : 0);
+    };
+    window.addEventListener("scroll", updateScroll, { passive: true });
+    updateScroll();
+
+    const io = typeof IntersectionObserver === "undefined"
+      ? null
+      : new IntersectionObserver(
+          (es) =>
+            es.forEach(
+              (e) => e.isIntersecting && setActive(e.target.id),
+            ),
+          { rootMargin: "-45% 0px -50% 0px" },
+        );
 
     sections.forEach((s) => {
       const el = document.getElementById(s.id);
-      if (el) io.observe(el);
+      if (el) io?.observe(el);
     });
 
     return () => {
       a();
       b();
-      io.disconnect();
+      io?.disconnect();
+      window.removeEventListener("scroll", updateScroll);
     };
   }, []);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setMobileOpen(false);
+        menuButton.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileOpen]);
+
   return (
     <>
+      <div
+        role="progressbar"
+        aria-label="Page scroll progress"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={Math.round(scrollProgress)}
+        className="scroll-progress fixed inset-x-0 top-0 z-[60] h-0.5 bg-transparent"
+      >
+        <span className="block h-full bg-live shadow-[0_0_12px_var(--live)] transition-[width] duration-150" style={{ width: `${scrollProgress}%` }} />
+      </div>
       <nav
-        aria-label="Main"
-        className="panel fixed left-1/2 top-4 z-50 flex w-max max-w-[calc(100vw-1rem)] -translate-x-1/2 items-center justify-start gap-0.5 overflow-x-auto overscroll-x-contain rounded-full px-2 py-1.5 md:top-6 md:gap-1 md:overflow-visible"
+        aria-label="Main navigation"
+        className={`panel fixed left-1/2 top-4 z-50 flex w-[min(52rem,calc(100vw-1.5rem))] -translate-x-1/2 items-center justify-between gap-2 rounded-2xl px-2 py-2 transition-colors md:top-6 md:rounded-full md:px-3 ${
+          scrolled ? "border-live/20 bg-background/95" : "bg-background/70"
+        }`}
       >
         <a
           href="#home"
-          className="hidden px-3 font-display text-sm font-semibold tracking-widest sm:block"
+          onClick={() => setMobileOpen(false)}
+          className="shrink-0 px-2 font-display text-xs font-semibold tracking-[0.14em] sm:text-sm"
         >
-          NO<span className="text-live">.</span>
+          AR<span className="mx-1 text-live">/</span><span className="hidden sm:inline">AKASH R</span>
         </a>
 
-        {sections.map((s) => (
-          <a
-            key={s.id}
-            href={`#${s.id}`}
-            onClick={() => play("click")}
-            aria-current={active === s.id ? "true" : undefined}
-            className={`rounded-full px-1 py-1.5 font-mono text-[10px] uppercase tracking-[0.08em] transition-colors sm:px-2.5 sm:tracking-[0.15em] md:px-3 md:text-[11px] ${
-              active === s.id
-                ? "bg-live-soft text-live"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {s.label}
-          </a>
-        ))}
+        <div
+          id="primary-navigation"
+          className={`${mobileOpen ? "grid" : "hidden"} absolute left-0 right-0 top-[calc(100%+0.6rem)] grid-cols-2 gap-1 rounded-2xl border border-border/80 bg-card p-2 shadow-[var(--shadow-panel)] sm:static sm:flex sm:flex-1 sm:items-center sm:justify-center sm:gap-0.5 sm:border-0 sm:bg-transparent sm:p-0 sm:shadow-none md:gap-1`}
+        >
+          {sections.map((s) => (
+            <a
+              key={s.id}
+              href={`#${s.id}`}
+              onClick={() => {
+                play("click");
+                setMobileOpen(false);
+              }}
+              aria-current={active === s.id ? "location" : undefined}
+              className={`flex min-h-11 items-center justify-center rounded-xl px-3 py-2 font-mono text-[10px] uppercase tracking-[0.12em] transition-colors sm:min-h-9 sm:rounded-full sm:px-2 sm:py-1.5 md:px-3 md:text-[11px] ${
+                active === s.id
+                  ? "bg-live-soft text-live"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {s.label}
+            </a>
+          ))}
+        </div>
 
         <button
+          ref={menuButton}
+          type="button"
+          aria-label={mobileOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={mobileOpen}
+          aria-controls="primary-navigation"
+          onClick={() => setMobileOpen((open) => !open)}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-live-soft hover:text-live sm:hidden"
+        >
+          {mobileOpen ? <X aria-hidden="true" className="h-4 w-4" /> : <Menu aria-hidden="true" className="h-4 w-4" />}
+        </button>
+
+        <button
+          type="button"
           aria-label={
-            muted ? "Unmute interface sounds" : "Mute interface sounds"
+            muted ? "Turn interface sounds on" : "Turn interface sounds off"
           }
           aria-pressed={muted}
           onClick={() => {
             setMuted(!muted);
             if (muted) setTimeout(() => play("select"), 0);
           }}
-          className="ml-0.5 rounded-full p-1.5 text-muted-foreground hover:text-live sm:ml-1 sm:p-2"
+          className="flex min-h-11 shrink-0 items-center gap-2 rounded-full px-2 text-muted-foreground transition-colors hover:text-live sm:px-2.5"
         >
           {muted ? (
             <VolumeX className="h-4 w-4" />
           ) : (
             <Volume2 className="h-4 w-4" />
           )}
+          <span className="font-mono text-[8px] tracking-[0.08em] sm:text-[9px]">
+            SOUND: {muted ? "OFF" : "ON"}
+          </span>
         </button>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.05"
+          value={volume}
+          aria-label="Interface sound volume"
+          aria-valuetext={`${Math.round(volume * 100)} percent`}
+          onChange={(event) => {
+            const value = Number(event.currentTarget.value);
+            setVolumeValue(value);
+            setVolume(value);
+          }}
+          className="sound-volume h-1 w-12 shrink-0 cursor-pointer accent-live sm:w-16"
+        />
       </nav>
-
-      {/* environment map */}
 
       <div
         aria-hidden
@@ -250,17 +333,26 @@ export function Nav() {
 
 /* ---------- hero ---------- */
 
-function RoleChips() {
+function RoleTicker() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const interval = window.setInterval(() => {
+      setIndex((current) => (current + 1) % profile.roles.length);
+    }, 3600);
+    return () => window.clearInterval(interval);
+  }, []);
+
   return (
-    <div className="flex flex-wrap gap-2" aria-label="Areas of interest">
-      {profile.roles.map((role) => (
-        <span
-          key={role}
-          className="rounded-full border border-live/20 bg-live-soft/60 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/80 sm:text-xs"
-        >
-          {role}
-        </span>
-      ))}
+    <div className="role-ticker mt-5 flex min-h-8 items-center gap-3">
+      <span aria-hidden="true" className="font-mono text-[9px] uppercase tracking-[0.18em] text-muted-foreground">
+        {portfolioCopy.hero.roleLabel}
+      </span>
+      <span key={index} aria-hidden="true" className="role-ticker__label font-mono text-xs font-medium uppercase tracking-[0.1em] text-live sm:text-sm">
+        {profile.roles[index]}
+      </span>
+      <span className="sr-only">Areas of interest: {profile.roles.join(", ")}.</span>
     </div>
   );
 }
@@ -269,30 +361,47 @@ export function Hero() {
   return (
     <section
       id="home"
-      className="relative flex min-h-screen items-center overflow-x-clip px-6 pb-16 pt-28 md:px-14"
+      className="hero-section relative flex min-h-screen items-center overflow-x-clip px-6 pb-16 pt-28 md:px-14"
     >
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
+      <div className="hero-atmosphere" aria-hidden="true">
+        <div className="hero-atmosphere__field" />
+        <div className="hero-atmosphere__signal" />
+        <svg className="hero-atmosphere__network" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" fill="none">
+          <path d="M760 30 900 170l-74 180 238 46 156-142 140 204" />
+          <path d="m830 350 138 221 234 41 116 198" />
+          <path d="m1064 396 72 215-234-40-76 220" />
+          <circle cx="900" cy="170" r="4" />
+          <circle cx="826" cy="350" r="3" />
+          <circle cx="1064" cy="396" r="4" />
+          <circle cx="1220" cy="254" r="3" />
+          <circle cx="1202" cy="612" r="4" />
+          <circle cx="1432" cy="458" r="3" />
+          <circle cx="1438" cy="810" r="4" />
+        </svg>
+      </div>
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-5">
         <div>
-          <div className="eyebrow word-in mb-6">
+          <div className="eyebrow word-in mb-7">
             {portfolioCopy.hero.eyebrow}
           </div>
 
-          <h1 className="text-6xl font-semibold leading-[0.98] md:text-7xl xl:text-8xl">
-            <span
-              className="word-in light-sweep inline-block"
-              style={{ animationDelay: "200ms" }}
-            >
-              {profile.name}<span className="text-foreground">.</span>
-            </span>
+          <h1 aria-label={portfolioCopy.hero.accessibleTitle} className="hero-title font-semibold uppercase">
+            {portfolioCopy.hero.titleLines.map((line, index) => (
+              <span
+                key={line}
+                className={`word-in block ${index === 1 ? "text-live" : index > 1 ? "hero-title__accent" : ""}`}
+                style={{ animationDelay: `${100 + index * 120}ms` }}
+              >
+                {line}
+              </span>
+            ))}
           </h1>
 
-          <h2 className="mt-6 max-w-xl text-xl font-medium leading-snug text-foreground/90 md:text-3xl">
+          <h2 className="mt-7 max-w-xl text-lg font-medium leading-snug text-foreground/90 md:text-2xl">
             {profile.headline}
           </h2>
 
-          <div className="mt-4">
-            <RoleChips />
-          </div>
+          <RoleTicker />
           <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             {profile.location}
           </p>
@@ -302,6 +411,10 @@ export function Hero() {
             style={{ animationDelay: "500ms" }}
           >
             {profile.intro}
+          </p>
+
+          <p className="mt-5 max-w-xl font-mono text-[10px] uppercase leading-relaxed tracking-[0.13em] text-foreground/75 sm:text-xs">
+            {portfolioCopy.hero.statement}
           </p>
 
           <div
@@ -359,18 +472,18 @@ function Workstation() {
         viewBox="0 0 500 500"
         fill="none"
       >
-        <circle cx="250" cy="250" r="221" />
-        <circle cx="250" cy="250" r="200" />
-        <path d="M250 18v52M250 430v52M18 250h52M430 250h52" />
-        <circle className="profile-stage__node" cx="250" cy="29" r="4" />
-        <circle className="profile-stage__node profile-stage__node--warm" cx="461" cy="315" r="3" />
+        <path d="M74 38h68M74 38v68m284-68h68v68M74 394v68h68m284 0h68v-68" />
+        <path d="M42 250h34m348 0h34M250 18v24m0 416v24" />
+        <path d="M74 132h24M402 368h24" strokeDasharray="2 7" />
+        <circle className="profile-stage__node" cx="142" cy="38" r="3" />
+        <circle className="profile-stage__node profile-stage__node--warm" cx="426" cy="394" r="3" />
       </svg>
 
-      <figure className="profile-stage__frame panel relative mx-auto w-[78%] overflow-hidden rounded-[2rem] p-2">
+      <figure className="profile-stage__frame panel relative mx-auto w-[78%] overflow-hidden rounded-sm p-2">
           <img
             src={photo}
             alt="Akash R working on a laptop at his desk"
-            className="aspect-[4/4.2] w-full rounded-[1.5rem] object-cover object-top"
+            className="aspect-[4/5] w-full rounded-[2px] object-cover object-top"
             fetchPriority="high"
             decoding="async"
           />
@@ -385,17 +498,16 @@ function Workstation() {
           </figcaption>
       </figure>
 
-      <div className="panel profile-stage__code absolute bottom-[7%] left-0 hidden w-52 p-3 font-mono text-[10px] leading-5 md:block">
-          <div className="text-muted-foreground"># model.py</div>
-          <div>
-            <span className="text-live">from</span> sklearn{" "}
-            <span className="text-live">import</span> ensemble
-          </div>
-          <div>model.fit(X_train, y_train)</div>
-          <div className="text-amber">→ ready to predict</div>
+      <div aria-hidden="true" className="profile-stage__code absolute bottom-[7%] left-0 hidden w-52 border-l border-live/50 pl-3 font-mono text-[10px] leading-5 md:block">
+          {portfolioCopy.hero.visualCode.map((line, index) => (
+            <div key={line} className={index === 0 ? "text-muted-foreground" : index === 3 ? "text-amber" : ""}>
+              {line}
+            </div>
+          ))}
       </div>
 
-      <div className="panel profile-stage__chart absolute right-0 top-[13%] hidden p-3 md:block">
+      <div aria-hidden="true" className="profile-stage__chart absolute right-0 top-[13%] hidden border-l border-live/50 pl-3 pr-1 py-2 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-foreground md:block">
+          <span className="text-live">{portfolioCopy.hero.signalLabel}</span>
           <svg
             width="90"
             height="44"
@@ -420,7 +532,7 @@ export function About() {
   return (
     <section
       id="about"
-      className="relative px-6 py-32 md:px-14"
+      className="section-editorial relative px-6 py-28 md:px-14 md:py-36"
     >
       <div className="mx-auto max-w-7xl">
         <Heading
@@ -428,97 +540,72 @@ export function About() {
           title={portfolioCopy.about.title}
         />
 
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.2fr]">
-          <Reveal className="flex items-center justify-center">
-            <div className="profile-orbit relative flex h-72 w-full max-w-sm items-center justify-center md:h-96">
-              <svg
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full"
-                viewBox="0 0 400 400"
-                fill="none"
-              >
-                <circle cx="200" cy="200" r="168" className="profile-orbit__ring" />
-                <circle cx="200" cy="200" r="142" className="profile-orbit__ring profile-orbit__ring--inner" />
-                <path d="M200 16v44M200 340v44M16 200h44M340 200h44" className="profile-orbit__ticks" />
-                <circle cx="200" cy="32" r="4" className="profile-orbit__node" />
-                <circle cx="344" cy="283" r="3" className="profile-orbit__node profile-orbit__node--warm" />
-              </svg>
+        <div className="grid items-center gap-10 md:grid-cols-[0.72fr_1.28fr] lg:gap-16">
+          <Reveal className="about-portrait">
+            <figure className="about-portrait__frame relative mx-auto max-w-sm overflow-hidden border border-live/45 p-2">
               <img
                 src={photo}
-                alt="Portrait of Akash R"
+                alt="Akash R, aspiring Machine Learning Engineer"
                 loading="lazy"
                 decoding="async"
-                className="profile-orbit__portrait absolute left-1/2 top-1/2 z-10 h-[64%] w-[64%] -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-live/50 object-cover object-top"
+                className="about-portrait__image aspect-[4/5] w-full object-cover object-top"
               />
-            </div>
+              <figcaption className="absolute inset-x-2 bottom-2 flex items-end justify-between bg-gradient-to-t from-[#08080B]/95 via-[#08080B]/50 to-transparent px-4 pb-4 pt-16 font-mono text-[9px] uppercase tracking-[0.13em] text-[#E7DDE0]">
+                <span>{profile.name}</span>
+                <span className="text-live">{profile.location}</span>
+              </figcaption>
+            </figure>
           </Reveal>
 
-          <Reveal delay={150} className="panel p-8 md:p-10">
+          <div className="about-content">
+          <Reveal className="about-story">
             {profile.about.map((p) => (
               <p
                 key={p}
-                className="mb-5 leading-relaxed text-foreground/90 md:text-lg"
+                className="mb-6 max-w-3xl font-display text-xl leading-relaxed text-foreground/90 md:text-2xl"
               >
                 {p}
               </p>
             ))}
-
-            <div className="mt-8 grid gap-6 sm:grid-cols-2">
-              <Info title={portfolioCopy.about.careerInterests} items={profile.interests} />
-              <Info title={portfolioCopy.about.technicalInterests} items={profile.technical} />
-
-              <Info
-                title={portfolioCopy.about.education}
-                items={education
-                  .filter((item) => item.tag !== "Training")
-                  .map((item) => `${item.title} — ${item.place}`)}
-              />
-
-              <Info
-                title={portfolioCopy.about.training}
-                items={education
-                  .filter((item) => item.tag === "Training")
-                  .map((item) => `${item.title} — ${item.place}`)}
-              />
+            <div className="about-compute mt-10" aria-hidden="true">
+              <svg viewBox="0 0 620 112" fill="none">
+                <path d="M8 56h112l52-35h112l55 35h112l52-35h109" />
+                <path d="M8 56h112l52 35h112l55-35h112l52 35h109" />
+                <path d="M172 21v70m112-70v70m55-35v35m112-35V21m52 70V21" />
+                {[[8, 56], [120, 56], [172, 21], [172, 91], [284, 21], [284, 91], [339, 56], [451, 56], [503, 21], [503, 91], [612, 56]].map(([cx, cy], index) => (
+                  <circle key={index} cx={cx} cy={cy} r={index === 0 || index === 10 ? 3 : 2} />
+                ))}
+              </svg>
             </div>
           </Reveal>
+
+          <ol className="about-principles divide-y divide-border/70">
+            {portfolioCopy.about.principles.map((principle, index) => (
+              <li key={principle.number} className="about-principle py-5 first:pt-0 last:pb-0">
+                <Reveal delay={index * 90} className="grid grid-cols-[3.5rem_1fr] gap-4">
+                  <span className="font-mono text-sm text-live">{principle.number}</span>
+                  <div>
+                    <h3 className="font-display text-lg font-semibold">{principle.title}</h3>
+                    <p className="mt-2 max-w-md text-sm leading-relaxed text-muted-foreground">{principle.description}</p>
+                  </div>
+                </Reveal>
+              </li>
+            ))}
+          </ol>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-function Info({
-  title,
-  items,
-}: {
-  title: string;
-  items: string[];
-}) {
-  return (
-    <div>
-      <div className="eyebrow mb-2 !text-[10px] !text-amber">
-        {title}
-      </div>
-
-      <ul className="space-y-1 text-sm text-muted-foreground">
-        {items.map((i) => (
-          <li key={i}>{i}</li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
 /* ---------- skills ---------- */
 
 export function Skills() {
-  const [selected, setSelected] = useState(skills[0]!.id);
-
   return (
     <section
       id="skills"
-      className="relative px-6 py-24 md:px-14 md:py-32"
+      className="skills-environment relative overflow-hidden px-6 py-24 md:px-14 md:py-32"
     >
       <div className="mx-auto max-w-7xl">
         <Heading
@@ -530,49 +617,21 @@ export function Skills() {
           {portfolioCopy.skills.introduction}
         </p>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {skills.map((category, index) => {
+        <div className="skills-grid">
+          {skills.map((category, categoryIndex) => {
             const Icon = SKILL_ICONS[category.id];
-            const active = category.id === selected;
-
             return (
-              <Reveal key={category.id} delay={index * 70}>
-                <article
-                  className={`group h-full rounded-2xl border bg-card/60 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-live/40 hover:bg-card/90 md:p-6 ${
-                    active
-                      ? "border-live/35 shadow-[0_18px_48px_-32px_var(--live)]"
-                      : "border-border/80"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    aria-pressed={active}
-                    onClick={() => {
-                      setSelected(category.id);
-                      play("select");
-                    }}
-                    className="flex min-h-11 w-full items-center gap-3 text-left"
-                  >
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-live-soft text-live transition-transform duration-300 group-hover:scale-105">
+              <Reveal key={category.id} delay={categoryIndex * 65}>
+                <article className={`skill-card skill-card--${category.id}`}>
+                  <div className="skill-card__heading">
+                    <span className="skill-card__icon">
                       <Icon aria-hidden="true" className="h-5 w-5" />
                     </span>
-                    <span className="flex-1 font-display text-lg font-semibold">
-                      {category.label}
-                    </span>
-                    <span
-                      aria-hidden="true"
-                      className={`h-2 w-2 rounded-full transition-colors ${
-                        active ? "bg-live" : "bg-muted-foreground/40"
-                      }`}
-                    />
-                  </button>
-
-                  <ul className="mt-5 flex flex-wrap gap-2">
-                    {category.items.map((item) => (
-                      <li
-                        key={item}
-                        className="rounded-lg border border-border/80 bg-background/50 px-2.5 py-1.5 text-xs leading-relaxed text-foreground/80"
-                      >
+                    <h3>{category.label}</h3>
+                  </div>
+                  <ul className="skill-card__skills" aria-label={`${category.label} skills`}>
+                    {category.items.map((item, itemIndex) => (
+                      <li key={item} style={{ animationDelay: `${itemIndex * 45}ms` }}>
                         {item}
                       </li>
                     ))}
@@ -597,10 +656,12 @@ const ICONS = {
 };
 
 const SKILL_ICONS = {
-  python: CodeXml,
+  programming: CodeXml,
+  libraries: ChartNoAxesColumnIncreasing,
   ml: BrainCircuit,
-  ds: ChartNoAxesColumnIncreasing,
   nlp: MessageSquareText,
+  deployment: Server,
+  databases: Database,
   tools: Wrench,
 } satisfies Record<SkillCategory["id"], typeof CodeXml>;
 
@@ -618,7 +679,7 @@ function Installation({
   return (
     <Reveal>
       <article
-        className={`group grid items-center gap-6 md:grid-cols-2 md:gap-12 xl:gap-20 ${
+        className={`project-case project-case--${p.id} group grid items-center gap-6 md:grid-cols-2 md:gap-12 xl:gap-20 ${
           reverse ? "md:[&>div:first-child]:order-2" : ""
         }`}
       >
@@ -645,7 +706,7 @@ function Installation({
               />
 
               <span className="absolute inset-0 flex items-center justify-center bg-background/10">
-                <span className="flex h-14 w-14 items-center justify-center rounded-full border border-white/25 bg-live text-primary-foreground shadow-[0_0_40px_-8px_var(--live)] transition-transform duration-300 group-hover:scale-110">
+              <span className="flex h-14 w-14 items-center justify-center rounded-full border border-[#E7DDE0]/25 bg-live text-primary-foreground shadow-[0_0_40px_-8px_var(--live)] transition-transform duration-300 group-hover:scale-110">
                   <Play aria-hidden="true" className="ml-1 h-5 w-5" />
                 </span>
               </span>
@@ -700,6 +761,11 @@ function Installation({
               </div>
             </div>
           )}
+          {!p.hasVideo && p.shape !== "clusters" && (
+            <span className="absolute bottom-6 right-7 rounded-sm border border-border/70 bg-background/80 px-2 py-1 font-mono text-[8px] uppercase tracking-[0.1em] text-muted-foreground">
+              {portfolioCopy.projects.illustrativeData}
+            </span>
+          )}
         </div>
 
         <div className="relative py-3 md:py-8">
@@ -713,6 +779,15 @@ function Installation({
           <p className="mb-6 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
             {p.summary}
           </p>
+
+          <div className="mb-6">
+            <p className="project-tech-label mb-2">{portfolioCopy.projects.technologies}</p>
+            <ul className="flex flex-wrap gap-x-4 gap-y-1.5">
+              {p.technologies.map((technology) => (
+                <li key={technology} className="project-tech-tag">{technology}</li>
+              ))}
+            </ul>
+          </div>
 
           {p.highlights && (
             <ul className="mb-6 flex flex-wrap gap-2">
@@ -831,7 +906,7 @@ function ClusterViz() {
                 c.cy + (r(ci * 50 + k + 0.5) - 0.5) * 60,
               )}
               r="3.5"
-              className={ci % 2 ? "fill-amber" : "fill-live"}
+              className={`cluster-viz__dot cluster-viz__dot--${ci}`}
             />
           ))}
 
@@ -873,13 +948,27 @@ export function Projects({
   return (
     <section
       id="projects"
-      className="relative px-6 py-24 md:px-14 md:py-32"
+      className="section-editorial relative px-6 py-24 md:px-14 md:py-32"
     >
       <div className="mx-auto max-w-7xl">
         <Heading
           eyebrow={portfolioCopy.projects.eyebrow}
           title={portfolioCopy.projects.title}
         />
+
+        <div className="mb-14 flex flex-col gap-5 border-y border-border/70 py-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="max-w-2xl leading-relaxed text-muted-foreground">
+            {portfolioCopy.projects.introduction}
+          </p>
+          <a
+            href={profile.github}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-ghost w-fit"
+          >
+            <GithubIcon /> {portfolioCopy.projects.githubProfile}
+          </a>
+        </div>
 
         <div className="space-y-16 md:space-y-24">
           <div
@@ -899,13 +988,126 @@ export function Projects({
   );
 }
 
+/* ---------- machine-learning workflow ---------- */
+
+export function Pipeline() {
+  const [selected, setSelected] = useState(0);
+  const stage = portfolioCopy.pipeline.stages[selected]!;
+
+  return (
+    <section
+      id="pipeline"
+      aria-labelledby="pipeline-title"
+      className="pipeline-environment relative overflow-hidden px-6 py-20 md:px-14 md:py-24"
+    >
+      <div className="mx-auto max-w-7xl">
+        <Reveal className="mb-10">
+          <div className="eyebrow mb-4">{portfolioCopy.pipeline.eyebrow}</div>
+          <h2 id="pipeline-title" className="text-4xl font-semibold leading-tight md:text-6xl">
+            {portfolioCopy.pipeline.title}
+          </h2>
+          <p className="mt-5 max-w-2xl leading-relaxed text-muted-foreground md:text-lg">
+            {portfolioCopy.pipeline.introduction}
+          </p>
+        </Reveal>
+
+        <div className="pipeline-viz-wrap mb-8">
+          <svg
+            role="img"
+            aria-label={portfolioCopy.pipeline.visualizationLabel}
+            viewBox="0 0 1000 280"
+            className="pipeline-viz"
+            data-stage={stage.id}
+          >
+            <path className="pipeline-viz__axis" d="M56 140h888" />
+            <g className="pipeline-viz__layer pipeline-viz__layer--raw">
+              {portfolioCopy.pipeline.visuals.raw.map(([cx, cy], index) => (
+                <circle key={index} cx={cx} cy={cy} r="5" />
+              ))}
+            </g>
+            <g className="pipeline-viz__layer pipeline-viz__layer--cleaned">
+              {portfolioCopy.pipeline.visuals.cleaned.map(([cx, cy], index) => (
+                <circle key={index} cx={cx} cy={cy} r="5" />
+              ))}
+            </g>
+            <g className="pipeline-viz__layer pipeline-viz__layer--features">
+              {portfolioCopy.pipeline.visuals.features.map(([cx, cy], index) => (
+                <circle key={index} cx={cx} cy={cy} r="5" />
+              ))}
+            </g>
+            <g className="pipeline-viz__connections">
+              <path d="m218 112 48-8m54 60 50-18m240-41 48 20m-280 1 117 1m-117 0 42 22" />
+            </g>
+            <g className="pipeline-viz__layer pipeline-viz__layer--deployment">
+              {portfolioCopy.pipeline.visuals.deployment.map(([cx, cy], index) => (
+                <circle key={index} cx={cx} cy={cy} r="5" />
+              ))}
+            </g>
+            <rect className="pipeline-viz__result" x="395" y="54" width="210" height="170" rx="2" />
+            <text className="pipeline-viz__result-label" x="500" y="126" textAnchor="middle">MODEL OUTPUT</text>
+            <text className="pipeline-viz__result-value" x="500" y="157" textAnchor="middle">Deployment</text>
+          </svg>
+          <p className="pipeline-viz__caption">{portfolioCopy.pipeline.visualizationLabel}</p>
+        </div>
+
+        <ol className="pipeline-steps relative grid gap-3 sm:grid-cols-2 lg:grid-cols-6 lg:gap-2">
+          <li aria-hidden="true" className="pipeline-steps__track hidden lg:block" />
+          {portfolioCopy.pipeline.stages.map((item, index) => (
+            <li key={item.id} className="relative">
+              <button
+                type="button"
+                aria-pressed={selected === index}
+                aria-describedby="pipeline-stage-description"
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "mouse") setSelected(index);
+                }}
+                onFocus={() => setSelected(index)}
+                onClick={() => {
+                  setSelected(index);
+                  play("select");
+                }}
+                className={`pipeline-step group flex min-h-24 w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-300 hover:-translate-y-1 focus-visible:-translate-y-1 lg:min-h-0 lg:flex-col lg:items-start lg:gap-5 lg:border-0 lg:bg-transparent lg:p-2 lg:hover:translate-y-0 lg:focus-visible:translate-y-0 ${
+                  selected === index
+                    ? "border-live/40 bg-live-soft/60 shadow-[0_16px_40px_-28px_var(--live)] lg:shadow-none"
+                    : "border-border/70 bg-card/40 hover:border-live/30 lg:border-transparent lg:bg-transparent"
+                }`}
+              >
+                <span className={`pipeline-step__node relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-full border font-mono text-xs transition-colors ${
+                  selected === index
+                    ? "border-live bg-background text-live shadow-[0_0_28px_-10px_var(--live)]"
+                    : "border-border bg-card text-muted-foreground group-hover:border-live/50 group-hover:text-live"
+                }`}>
+                  0{index + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-display text-base font-semibold leading-snug lg:text-sm">
+                    {item.title}
+                  </span>
+                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground lg:hidden">
+                    Stage 0{index + 1}
+                  </span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+
+        <div id="pipeline-stage-description" className="pipeline-detail mt-5 rounded-2xl border border-border/70 bg-card/45 p-5 md:p-6">
+          <div className="eyebrow mb-2 !text-[10px]">{stage.title}</div>
+          <p className="max-w-3xl leading-relaxed text-foreground/85">{stage.description}</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ---------- education ---------- */
 
 export function Education() {
   return (
     <section
       id="education"
-      className="relative px-6 py-24 md:px-14 md:py-32"
+      className="section-editorial relative px-6 py-24 md:px-14 md:py-32"
     >
       <div className="mx-auto max-w-5xl">
         <Heading
@@ -913,19 +1115,12 @@ export function Education() {
           title={portfolioCopy.education.title}
         />
 
-        <ol className="relative space-y-4 before:absolute before:bottom-8 before:left-[0.6875rem] before:top-8 before:w-px before:bg-gradient-to-b before:from-live/60 before:via-live/20 before:to-transparent">
+        <ol className="journey-timeline">
           {education.map((e, i) => (
-            <li
-              key={e.title}
-              className="relative pl-10"
-            >
-              <span
-                aria-hidden="true"
-                className="absolute left-2 top-7 h-3 w-3 rounded-full border-2 border-background bg-live shadow-[0_0_18px_var(--live)]"
-              />
-
+            <li key={e.title} className="journey-timeline__entry">
+              <span aria-hidden="true" className="journey-timeline__node" />
               <Reveal delay={i * 70}>
-                <article className="rounded-2xl border border-border/80 bg-card/55 p-5 transition-colors duration-300 hover:border-live/35 hover:bg-card/80 sm:p-6">
+                <article className="journey-entry">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <span className="rounded-full border border-live/25 bg-live-soft px-3 py-1 font-mono text-[10px] uppercase tracking-[0.14em] text-live">
                       {e.tag}
@@ -958,7 +1153,7 @@ export function Contact() {
   return (
     <section
       id="contact"
-      className="relative px-6 py-24 md:px-14 md:py-32"
+      className="contact-section relative px-6 py-24 md:px-14 md:py-32"
     >
       <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-live/20 bg-card/60 shadow-[0_32px_90px_-54px_var(--live)]">
         <div
